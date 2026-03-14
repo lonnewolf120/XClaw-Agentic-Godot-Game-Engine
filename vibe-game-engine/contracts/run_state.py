@@ -3,10 +3,15 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import Field, StrictStr, conint
 
+from contracts.base import StrictModel
 from contracts.export import ExportResult
 from contracts.validation import ValidationReport
+
+PositiveStrictInt = conint(strict=True, ge=1)
+NonNegativeStrictInt = conint(strict=True, ge=0)
+RetryCapStrictInt = conint(strict=True, ge=1, le=3)
 
 
 class RunMode(str, Enum):
@@ -33,24 +38,21 @@ class OrchestrationNode(str, Enum):
     DONE = "done"
 
 
-class RetryEvent(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class RetryEvent(StrictModel):
 
-    attempt: StrictInt = Field(ge=1)
+    attempt: PositiveStrictInt
     node: OrchestrationNode
     reason: StrictStr
     timestamp_utc: StrictStr
 
 
-class ArtifactLogBundle(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class ArtifactLogBundle(StrictModel):
 
     artifact_paths: List[StrictStr] = Field(default_factory=list)
     log_paths: List[StrictStr] = Field(default_factory=list)
 
 
-class RunState(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class RunState(StrictModel):
 
     run_id: StrictStr
     prompt: StrictStr
@@ -58,8 +60,8 @@ class RunState(BaseModel):
     status: RunStatus = RunStatus.INTAKE
     current_node: OrchestrationNode = OrchestrationNode.INTAKE
 
-    retry_count: StrictInt = Field(default=0, ge=0)
-    max_retries: StrictInt = Field(default=3, ge=1, le=3)
+    retry_count: NonNegativeStrictInt = 0
+    max_retries: RetryCapStrictInt = 3
     retry_events: List[RetryEvent] = Field(default_factory=list)
 
     workspace_dir: StrictStr

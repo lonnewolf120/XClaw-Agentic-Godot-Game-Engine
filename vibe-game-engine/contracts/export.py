@@ -3,7 +3,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import List
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
+from pydantic import Field, StrictBool, StrictStr, conint
+
+from contracts.base import StrictModel
+
+NonNegativeStrictInt = conint(strict=True, ge=0)
 
 
 class ExportTarget(str, Enum):
@@ -12,8 +16,7 @@ class ExportTarget(str, Enum):
     WEB = "web"
 
 
-class ExportRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class ExportRequest(StrictModel):
 
     run_id: StrictStr
     project_dir: StrictStr
@@ -22,17 +25,15 @@ class ExportRequest(BaseModel):
     output_path: StrictStr
 
 
-class ExportArtifact(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class ExportArtifact(StrictModel):
 
     target: ExportTarget
     artifact_path: StrictStr
-    size_bytes: StrictInt = Field(ge=0)
+    size_bytes: NonNegativeStrictInt
     sha256: StrictStr
 
 
-class ExportResult(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class ExportResult(StrictModel):
 
     run_id: StrictStr
     success: StrictBool

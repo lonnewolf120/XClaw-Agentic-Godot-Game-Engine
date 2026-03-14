@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from contracts.run_state import OrchestrationNode, RetryEvent, RunState, RunStatus
 from contracts.validation import ValidationReport
+from orchestration._compat import model_copy_compat
 
 
 def run_validation(state: RunState, report: ValidationReport) -> RunState:
@@ -17,7 +18,7 @@ def run_validation(state: RunState, report: ValidationReport) -> RunState:
                 "failure_reason": None,
             }
         )
-        return state.model_copy(update=update)
+        return model_copy_compat(state, update=update)
 
     next_retry_count = state.retry_count + 1
     retry_event = RetryEvent(
@@ -38,7 +39,7 @@ def run_validation(state: RunState, report: ValidationReport) -> RunState:
                 "failure_reason": "validation_retry_exhausted",
             }
         )
-        return state.model_copy(update=update)
+        return model_copy_compat(state, update=update)
 
     update.update(
         {
@@ -49,4 +50,4 @@ def run_validation(state: RunState, report: ValidationReport) -> RunState:
             "failure_reason": report.summary,
         }
     )
-    return state.model_copy(update=update)
+    return model_copy_compat(state, update=update)

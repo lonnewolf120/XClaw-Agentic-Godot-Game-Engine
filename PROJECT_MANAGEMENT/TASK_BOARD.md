@@ -32,7 +32,7 @@ Deliver strict contracts, deterministic orchestration skeleton, bounded validati
 |---|---|---|---|---|---|---|---|
 | PM-001 | M0 | Create `PROJECT_MANAGEMENT` workspace | PM Agent | P0 | `done` | None | Directory exists |
 | PM-002 | M0 | Create master planning docs (`MASTER_PLAN`, `MILESTONES`, `TASK_BOARD`, `QUALITY_GATES`, `PROGRESS_LOG`) | PM Agent | P0 | `in_progress` | PM-001 | All files created with initial content |
-| ENG-001 | M0 | Initialize `godot/vibe-game-engine` scaffold folders | Coordinator Agent | P0 | `done` | None | Core directories exist |
+| ENG-001 | M0 | Initialize `vibe-game-engine` scaffold folders | Coordinator Agent | P0 | `done` | None | Core directories exist |
 | ENG-002 | M0 | Define strict Pydantic v2 contracts (`RunState`, `ExportRequest`, `ValidationReport`) | Coding Agent | P0 | `done` | ENG-001 | Contracts compile and forbid extra keys |
 | ENG-003 | M0 | Add orchestration state graph skeleton (LangGraph) | Coordinator Agent | P0 | `done` | ENG-002 | Graph runs dry-run without execution errors |
 | ENG-004 | M0 | Add deterministic validation shell script (`scripts/validate.sh`) | Debugger Agent | P0 | `done` | ENG-001 | Script exits non-zero on fatal patterns |
@@ -111,12 +111,14 @@ A task is `done` only if:
 
 ## Evidence (2026-03-14)
 
-- Implemented strict contracts and exports under `godot/vibe-game-engine/contracts/`.
-- Implemented orchestration skeleton and retry branch under `godot/vibe-game-engine/orchestration/`.
-- Implemented validation tooling: `godot/vibe-game-engine/scripts/validate.sh` and `godot/vibe-game-engine/tools/log_parser.py`.
+- Implemented strict contracts and exports under `vibe-game-engine/contracts/`.
+- Implemented orchestration skeleton and retry branch under `vibe-game-engine/orchestration/`.
+- Implemented validation tooling: `vibe-game-engine/scripts/validate.sh` and `vibe-game-engine/tools/log_parser.py`.
 - Added deterministic tests:
-	- `godot/vibe-game-engine/tests/test_contracts.py`
-	- `godot/vibe-game-engine/tests/test_validation_loop.py`
+	- `vibe-game-engine/tests/test_contracts.py`
+	- `vibe-game-engine/tests/test_validation_loop.py`
 - Test evidence:
 	- Command: `python -m pytest tests -q`
 	- Result: `6 passed in 0.07s`
+	- Command: `python3.12 -m pytest tests -q`
+	- Result: `6 passed in 0.05s`

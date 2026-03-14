@@ -4,6 +4,7 @@ from typing import Dict
 
 from contracts.run_state import OrchestrationNode, RunState, RunStatus
 from contracts.validation import ValidationReport
+from orchestration._compat import model_copy_compat
 from orchestration.nodes.debug import run_debug
 from orchestration.nodes.intake import run_intake
 from orchestration.nodes.planning import run_planning
@@ -45,6 +46,6 @@ class StateMachine:
             return run_debug(state)
 
         if state.current_node == OrchestrationNode.DONE:
-            return state.model_copy(update={"status": RunStatus.COMPLETED})
+            return model_copy_compat(state, update={"status": RunStatus.COMPLETED})
 
         raise ValueError(f"Unsupported node: {state.current_node}")

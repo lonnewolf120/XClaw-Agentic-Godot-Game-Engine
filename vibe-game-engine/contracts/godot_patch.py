@@ -3,7 +3,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
+from pydantic import Field, StrictBool, StrictStr, conint
+
+from contracts.base import StrictModel
+
+PositiveStrictInt = conint(strict=True, ge=1)
 
 
 class PatchOp(str, Enum):
@@ -12,16 +16,14 @@ class PatchOp(str, Enum):
     DELETE = "delete"
 
 
-class PatchHunk(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class PatchHunk(StrictModel):
 
-    start_line: StrictInt = Field(ge=1)
-    end_line: StrictInt = Field(ge=1)
+    start_line: PositiveStrictInt
+    end_line: PositiveStrictInt
     replacement: StrictStr
 
 
-class GodotFilePatch(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class GodotFilePatch(StrictModel):
 
     patch_id: StrictStr
     op: PatchOp
@@ -33,9 +35,8 @@ class GodotFilePatch(BaseModel):
     creates_backup: StrictBool = True
 
 
-class PatchBatch(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+class PatchBatch(StrictModel):
 
     run_id: StrictStr
-    attempt: StrictInt = Field(ge=1)
+    attempt: PositiveStrictInt
     patches: List[GodotFilePatch] = Field(default_factory=list)

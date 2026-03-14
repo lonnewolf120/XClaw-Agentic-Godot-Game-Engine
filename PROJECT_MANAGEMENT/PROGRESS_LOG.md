@@ -9,7 +9,7 @@
 ### Repository Preparation
 - Confirmed workspace root and major project directories.
 - Established initial implementation path under:
-  - `godot/vibe-game-engine/`
+  - `vibe-game-engine/`
 - Created core structure for production work:
   - `contracts/`
   - `agents/`
@@ -78,25 +78,25 @@
   4. Tests
 
 ### Implemented Files
-- `godot/vibe-game-engine/contracts/run_state.py`
-- `godot/vibe-game-engine/contracts/project_spec.py`
-- `godot/vibe-game-engine/contracts/godot_patch.py`
-- `godot/vibe-game-engine/contracts/validation.py`
-- `godot/vibe-game-engine/contracts/export.py`
-- `godot/vibe-game-engine/contracts/manifest.py`
-- `godot/vibe-game-engine/contracts/__init__.py`
-- `godot/vibe-game-engine/orchestration/state_machine.py`
-- `godot/vibe-game-engine/orchestration/nodes/intake.py`
-- `godot/vibe-game-engine/orchestration/nodes/planning.py`
-- `godot/vibe-game-engine/orchestration/nodes/validation.py`
-- `godot/vibe-game-engine/orchestration/nodes/debug.py`
-- `godot/vibe-game-engine/orchestration/__init__.py`
-- `godot/vibe-game-engine/orchestration/nodes/__init__.py`
-- `godot/vibe-game-engine/scripts/validate.sh`
-- `godot/vibe-game-engine/tools/log_parser.py`
-- `godot/vibe-game-engine/tools/__init__.py`
-- `godot/vibe-game-engine/tests/test_contracts.py`
-- `godot/vibe-game-engine/tests/test_validation_loop.py`
+- `vibe-game-engine/contracts/run_state.py`
+- `vibe-game-engine/contracts/project_spec.py`
+- `vibe-game-engine/contracts/godot_patch.py`
+- `vibe-game-engine/contracts/validation.py`
+- `vibe-game-engine/contracts/export.py`
+- `vibe-game-engine/contracts/manifest.py`
+- `vibe-game-engine/contracts/__init__.py`
+- `vibe-game-engine/orchestration/state_machine.py`
+- `vibe-game-engine/orchestration/nodes/intake.py`
+- `vibe-game-engine/orchestration/nodes/planning.py`
+- `vibe-game-engine/orchestration/nodes/validation.py`
+- `vibe-game-engine/orchestration/nodes/debug.py`
+- `vibe-game-engine/orchestration/__init__.py`
+- `vibe-game-engine/orchestration/nodes/__init__.py`
+- `vibe-game-engine/scripts/validate.sh`
+- `vibe-game-engine/tools/log_parser.py`
+- `vibe-game-engine/tools/__init__.py`
+- `vibe-game-engine/tests/test_contracts.py`
+- `vibe-game-engine/tests/test_validation_loop.py`
 
 ### Validation and Test Evidence
 - Python environment configured (system Python 3.12.10).
@@ -105,7 +105,7 @@
 - Result:
   - `6 passed in 0.07s`
 - VS Code diagnostics check:
-  - No errors found under `godot/vibe-game-engine/`.
+  - No errors found under `vibe-game-engine/`.
 
 ### Quality Gate Notes
 - Schema gate: satisfied for implemented contracts (`extra="forbid"`, strict typing).
@@ -121,3 +121,27 @@
 ### Blockers
 - No code-level blockers during this batch.
 - Milestone-level dependency remains: benchmark and real headless validation evidence pending before M1 sign-off.
+
+---
+
+## 2026-03-14 (Stability Fix: Python Interpreter/Pydantic Compatibility)
+
+### Blocker Classification
+- `environment`
+
+### Exact Blocker
+- Running `python -m pytest tests -q` in `vibe-game-engine/` used Python 3.10 with Pydantic 1.10.24, causing schema import failure (`unenforced field constraints` on strict ints).
+
+### What Was Attempted
+- Verified interpreter mismatch (`python` resolved to 3.10 + Pydantic v1).
+- Refactored contract numeric constraints to constrained strict types (`conint`) to avoid v1 unenforced-constraint errors.
+- Added cross-version strict base model in `contracts/base.py` to preserve `extra=forbid` in both Pydantic v1/v2.
+- Added compatibility shims for model copy/serialization paths used by orchestration and log parsing.
+
+### Validation Evidence
+- `python -m pytest tests -q` → `6 passed`
+- `C:/Users/USER/AppData/Local/Microsoft/WindowsApps/python3.12.exe -m pytest tests -q` → `6 passed`
+
+### Mitigation Path Going Forward
+- Keep contracts/orchestration runtime-compatible across v1/v2 during transition.
+- Continue standard run path with pinned Python 3.12 toolchain for milestone execution.

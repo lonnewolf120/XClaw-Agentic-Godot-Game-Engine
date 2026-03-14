@@ -154,12 +154,19 @@ def build_report(run_id: str, attempt: int, log_paths: Iterable[Path]) -> Valida
 
 def write_report(report: ValidationReport, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(report.model_dump_json(indent=2), encoding="utf-8")
+    if hasattr(report, "model_dump_json"):
+        content = report.model_dump_json(indent=2)
+    else:
+        content = report.json(indent=2)
+    output_path.write_text(content, encoding="utf-8")
 
 
 def exit_code_from_report(report_path: Path) -> int:
     payload = json.loads(report_path.read_text(encoding="utf-8"))
-    report = ValidationReport.model_validate(payload)
+    if hasattr(ValidationReport, "model_validate"):
+        report = ValidationReport.model_validate(payload)
+    else:
+        report = ValidationReport.parse_obj(payload)
     return 0 if report.success else 1
 
 
