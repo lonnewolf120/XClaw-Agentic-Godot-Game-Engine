@@ -1,0 +1,48 @@
+name: Vibe Engine Validation
+
+on:
+  push:
+    paths:
+      - vibe-game-engine/**
+      - PROJECT_MANAGEMENT/**
+      - .github/workflows/vibe-engine-validation.yml
+  pull_request:
+    paths:
+      - vibe-game-engine/**
+      - PROJECT_MANAGEMENT/**
+      - .github/workflows/vibe-engine-validation.yml
+
+jobs:
+  deterministic-validation:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+
+    defaults:
+      run:
+        working-directory: vibe-game-engine
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest "pydantic>=1.10,<3"
+
+      - name: Run tests
+        run: python -m pytest tests -q
+
+      - name: Run smoke prompt validation
+        run: python scripts/smoke_single_prompt.py
+
+      - name: Run benchmark validation
+        run: python scripts/qa_benchmark.py

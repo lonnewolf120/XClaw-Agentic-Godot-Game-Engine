@@ -189,6 +189,26 @@ A milestone is **Done** only if all are true:
 
 ---
 
+## Needs-Human Escalation Policy (B-002)
+
+When a run reaches `needs_human` after retry budget exhaustion, apply this policy immediately:
+
+1. Auto-create escalation artifact:
+   - `runs/<run_id>/.vibe/escalation/needs_human_ticket.json`
+2. Auto-append queue entry:
+   - `runs/needs_human_queue.jsonl`
+3. Required ticket fields:
+   - `run_id`, `retry_count`, `max_retries`, `failure_reason`
+   - `latest_validation_summary`, retry event timeline, `workspace_dir`
+4. Human operator action:
+   - Triage queue entries in FIFO order.
+   - Classify as `prompt_issue`, `template_issue`, `runtime_issue`, or `agent_logic_issue`.
+   - Record disposition and mitigation in `PROGRESS_LOG.md`.
+5. Completion rule:
+   - Do not rerun until a concrete mitigation is attached to the ticket.
+
+---
+
 ## Risk Management Rules
 
 - Track each risk with:
@@ -247,3 +267,51 @@ At any point, ask:
 5. Is the project now closer to shippable release quality?
 
 If any answer is “no,” stop and re-align before continuing.
+
+---
+
+## Docker Baseline Services Map (OPS-001)
+
+The baseline local service map is defined in:
+- `docker-compose.vibe-baseline.yml`
+
+Services included:
+1. `ollama` — local LLM endpoint for tool-augmented planning/coding.
+2. `comfyui` — optional asset generation backend.
+3. `godot_headless_461` — pinned Godot 4.6.1 headless runtime for validation/export parity.
+4. `bridge_service` — placeholder bridge service endpoint for live editor integration wiring.
+
+Operational notes:
+- Use this compose file as the default local stack for M2/M3 verification.
+- If a service is unavailable, mark run status as blocked and record fallback in `PROGRESS_LOG.md`.
+- Any service/image version change must be logged in `DECISIONS.md`.
+
+---
+
+## Dashboard Command Center (M4)
+
+Central UI location:
+- `vibe-game-engine/dashboard-nextjs/`
+
+Launch commands:
+1. From workspace root (compat wrapper):
+   - `python ./scripts/dashboard_server.py`
+2. Direct Next.js launch:
+   - `Set-Location "vibe-game-engine/dashboard-nextjs"`
+   - `npm install`
+   - `npm run dev`
+
+Default URL:
+- `http://127.0.0.1:3000`
+
+Available command controls:
+1. `Run Pytest` (`python -m pytest tests -q`)
+2. `Run Smoke Prompt` (`python scripts/smoke_single_prompt.py`)
+3. `Run Benchmark` (`python scripts/qa_benchmark.py`)
+4. `Run Asset Quality Gate` (`python scripts/run_asset_quality_gate.py`)
+5. `Triage Escalations` (`python scripts/triage_escalations.py`)
+
+Operational rules:
+- Only allowlisted commands can run from dashboard API.
+- Command outputs are logged under `runs/dashboard_commands/`.
+- Dashboard polling interval is 3 seconds for overview + jobs endpoints.

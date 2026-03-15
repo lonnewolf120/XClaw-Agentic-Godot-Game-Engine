@@ -1,0 +1,31 @@
+# Deterministic benchmark corpus v1
+A tiny platformer with jump and collect
+Endless runner with obstacles
+Puzzle game with moving blocks
+Top-down shooter with waves
+Simple point-and-click narrative
+Platformer with moving platforms
+Roguelike dungeon crawler
+2D farming sim with day cycles
+Inventory system with crafting
+Visual novel with choices
+Twin-stick survival arena with pickups
+Turn-based tactics skirmish prototype
+Physics sandbox with breakable crates
+Stealth puzzle with patrol guards
+Metroidvania room unlock flow
+Lane defense with upgrade choices
+Rhythm tap game with combo meter
+Isometric action RPG starter loop
+Boss rush with telegraphed attacks
+Arcade pinball with score multipliers
+Auto-battler with deterministic rounds
+Deckbuilder battle with card synergies
+Idle clicker with prestige reset
+Space mining loop with cargo management
+Cooking game with timed recipes
+Shop management sim with customers
+Procedural platformer seed replay
+Grid tactics puzzle with push blocks
+Fishing mini-game with rarity tiers
+Narrative mystery with clue board

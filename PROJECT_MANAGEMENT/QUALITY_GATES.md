@@ -195,6 +195,8 @@ No exceptions.
 - Validation/debug retries: **max 3** per run.
 - If 3 attempts fail:
   - Mark run `needs_human`.
+  - Auto-write escalation ticket to `runs/<run_id>/.vibe/escalation/needs_human_ticket.json`.
+  - Auto-append queue record to `runs/needs_human_queue.jsonl`.
   - Attach root-cause summary.
   - Preserve all logs and patches.
 - No silent continuation after retry exhaustion.
@@ -269,6 +271,14 @@ Missing artifacts = gate failure.
 - Bridge fallback success: **>= 99.5%**
 - Crash-free 2-minute smoke run: **>= 98%**
 
+Benchmark tracking requirements:
+- Prompt benchmark corpus is versioned at `vibe-game-engine/benchmarks/prompt_corpus_v1.txt`.
+- Each benchmark run must write:
+  - `vibe-game-engine/benchmarks/results/latest.json`
+  - `vibe-game-engine/benchmarks/results/history.jsonl`
+- Trend review cadence:
+  - Weekly review on success rate and `needs_human` rate in PM sync.
+
 If SLOs regress for 2 consecutive runs, open incident and freeze new feature merges.
 
 ---
@@ -278,6 +288,28 @@ If SLOs regress for 2 consecutive runs, open incident and freeze new feature mer
 - Never store secrets in logs/artifacts.
 - Bridge token handled via secure local file/env only.
 - Per-run isolated workspace required.
+
+---
+
+## 11) Policy Locks (D-001/D-002/D-003)
+
+Canonical policy source:
+- `vibe-game-engine/config/operational_policies.json`
+
+Locked values:
+1. Run workspace root (`D-001`):
+  - `runs/<run_id>`
+2. Minimum smoke durations (`D-002`):
+  - Windows: 120 seconds
+  - Linux: 120 seconds
+  - Web: 90 seconds
+  - Android: 90 seconds
+3. Asset fallback starter library (`D-003`):
+  - Max total assets: 32
+  - Category caps: sprites 12, tiles 8, UI 6, SFX 4, music 2
+  - Constraints: max texture resolution 1024, max audio 45 seconds, formats png/ogg/wav
+
+Any policy value change requires ADR entry and task board update.
 - Dependency allowlist enforced.
 - Third-party assets must include license metadata.
 
@@ -310,3 +342,19 @@ Any modification to these gates requires:
 
 **Enforcement Statement:**  
 These gates are mandatory for all agents, all modes, all milestones, and all releases.
+
+---
+
+## 13) M0 Definition of Done Lock (PM-003)
+
+Date: 2026-03-14  
+Status: Approved
+
+M0 is considered locked only when all are true:
+1. PM governance documents exist and are internally coherent.
+2. Task board and progress log provide sufficient status for day-to-day execution.
+3. Core implementation scaffolding exists at `vibe-game-engine/`.
+4. Quality gates and milestone execution protocol are defined and enforced.
+
+Approval note:
+- This lock is now approved and tracked as PM-003 complete.

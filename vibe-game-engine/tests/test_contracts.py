@@ -18,6 +18,7 @@ from contracts.project_spec import (
     ScopeGuardrails,
 )
 from contracts.run_state import RunMode, RunState
+from contracts.task_graph import TaskGraph, TaskNode, TaskPriority, TaskType
 
 
 def test_run_state_rejects_extra_keys() -> None:
@@ -78,4 +79,38 @@ def test_export_request_rejects_extra_key() -> None:
             target=ExportTarget.WINDOWS,
             output_path="runs/run-001/export/game.exe",
             extra="invalid",
+        )
+
+
+def test_task_graph_rejects_extra_key() -> None:
+    with pytest.raises(ValidationError):
+        TaskGraph(
+            run_id="run-001",
+            summary="M1 execution plan",
+            nodes=["plan", "validate"],
+            tasks=[
+                TaskNode(
+                    task_id="T-1",
+                    title="Build plan",
+                    task_type=TaskType.CODE,
+                    priority=TaskPriority.P0,
+                    owner="coordinator",
+                    acceptance_criteria=["schema valid"],
+                    estimated_minutes=20,
+                )
+            ],
+            unexpected=True,
+        )
+
+
+def test_task_graph_rejects_wrong_type() -> None:
+    with pytest.raises(ValidationError):
+        TaskNode(
+            task_id="T-1",
+            title="Build plan",
+            task_type=TaskType.CODE,
+            priority=TaskPriority.P0,
+            owner="coordinator",
+            acceptance_criteria=["schema valid"],
+            estimated_minutes="20",
         )

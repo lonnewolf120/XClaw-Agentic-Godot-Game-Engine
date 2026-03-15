@@ -1,2 +1,10 @@
 **/venv
 **/__pycache__
+**/.pytest_cache
+**/.godot
+**/.vibe
+**/export/
+vibe-game-engine/benchmarks/results/
+vibe-game-engine/runs/
+vibe-game-engine/dashboard-nextjs/node_modules/
+vibe-game-engine/dashboard-nextjs/.next/

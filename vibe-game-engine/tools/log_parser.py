@@ -19,6 +19,8 @@ FATAL_PATTERNS: Sequence[Tuple[re.Pattern[str], str]] = (
     (re.compile(r"\\bSCRIPT ERROR\\b", re.IGNORECASE), "script_error"),
     (re.compile(r"\\bParse Error\\b", re.IGNORECASE), "parse_error"),
     (re.compile(r"\\bCRASH\\b", re.IGNORECASE), "crash"),
+    (re.compile(r"Error response from daemon", re.IGNORECASE), "docker_error"),
+    (re.compile(r"command failed", re.IGNORECASE), "command_failed"),
     (re.compile(r"Cannot open file", re.IGNORECASE), "missing_file"),
     (re.compile(r"Invalid get index", re.IGNORECASE), "invalid_get_index"),
 )

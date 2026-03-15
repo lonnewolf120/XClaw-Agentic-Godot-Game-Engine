@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vibe Engine Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <header class="hero">
+      <p class="kicker">Vibe Engine Control Plane</p>
+      <h1>Agentic Command Center</h1>
+      <p class="sub">
+        Track orchestration status, benchmark health, and trigger deterministic commands from one surface.
+      </p>
+      <div class="pulse" id="last-updated">Syncing telemetry...</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel kpi-panel" aria-label="KPIs">
+        <h2>Runtime KPIs</h2>
+        <div class="kpi-grid" id="kpi-grid"></div>
+      </section>
+
+      <section class="panel agents-panel" aria-label="Agents">
+        <h2>Agent States</h2>
+        <div class="agent-grid" id="agent-grid"></div>
+      </section>
+
+      <section class="panel commands-panel" aria-label="Commands">
+        <h2>Command Console</h2>
+        <p>Launch approved operations directly from dashboard API controls.</p>
+        <div class="command-grid" id="command-grid"></div>
+      </section>
+
+      <section class="panel jobs-panel" aria-label="Jobs">
+        <h2>Recent Command Jobs</h2>
+        <div id="jobs-list" class="jobs-list"></div>
+      </section>
+
+      <section class="panel runs-panel" aria-label="Recent runs">
+        <h2>Recent Run Workspaces</h2>
+        <div id="run-list" class="run-list"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

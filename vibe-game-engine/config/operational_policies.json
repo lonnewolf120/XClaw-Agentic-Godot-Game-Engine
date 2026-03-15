@@ -1,0 +1,36 @@
+{
+  "run_workspace": {
+    "policy_id": "D-001",
+    "canonical_root": "runs/<run_id>",
+    "description": "All generated run artifacts must live under runs/<run_id> for deterministic replay and triage."
+  },
+  "smoke_durations_seconds": {
+    "policy_id": "D-002",
+    "windows": 120,
+    "linux": 120,
+    "web": 90,
+    "android": 90,
+    "notes": "Minimum crash-free runtime before marking smoke as pass."
+  },
+  "asset_fallback_starter_library": {
+    "policy_id": "D-003",
+    "version": "v1",
+    "max_total_assets": 32,
+    "categories": {
+      "sprites": 12,
+      "tiles": 8,
+      "ui": 6,
+      "sfx": 4,
+      "music": 2
+    },
+    "constraints": {
+      "max_texture_resolution": 1024,
+      "max_audio_seconds": 45,
+      "allowed_formats": [
+        "png",
+        "ogg",
+        "wav"
+      ]
+    }
+  }
+}

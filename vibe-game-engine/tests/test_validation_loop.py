@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from contracts.run_state import OrchestrationNode, RunMode, RunState, RunStatus
-from contracts.validation import ValidationReport
+from contracts.validation import ValidationIssue, ValidationReport, ValidationSeverity, ValidationStage
 from orchestration.state_machine import StateMachine
 
 
@@ -77,3 +77,40 @@ def test_validation_loop_moves_to_needs_human_after_three_failures() -> None:
     assert state.current_node == OrchestrationNode.DONE
     assert state.retry_count == 3
     assert state.failure_reason == "validation_retry_exhausted"
+
+
+def test_debug_node_synthesizes_patch_batch_from_failure() -> None:
+    machine = StateMachine()
+    state = _base_state()
+
+    state = machine.step(state)
+    state = machine.step(state)
+
+    failure_report = ValidationReport(
+        run_id="run-001",
+        attempt=1,
+        success=False,
+        timed_out=False,
+        stage_logs=["runs/run-001/validation/import.log"],
+        issues=[
+            ValidationIssue(
+                stage=ValidationStage.CHECK,
+                severity=ValidationSeverity.FATAL,
+                message="Parse Error at res://scripts/player.gd",
+                matched_pattern="parse_error",
+            )
+        ],
+        fatal_count=1,
+        error_count=0,
+        warning_count=0,
+        summary="parse error",
+    )
+
+    state = machine.step(state, validation_report=failure_report)
+    assert state.status == RunStatus.DEBUGGING
+
+    state = machine.step(state)
+    assert state.current_node == OrchestrationNode.VALIDATION
+    assert state.proposed_patch_batch is not None
+    assert len(state.proposed_patch_batch.patches) >= 1
+    assert state.proposed_patch_batch.patches[0].file_path == "res://scripts/player.gd"

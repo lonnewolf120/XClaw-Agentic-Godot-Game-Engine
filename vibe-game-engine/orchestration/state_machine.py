@@ -43,7 +43,7 @@ class StateMachine:
             return run_validation(state, validation_report)
 
         if state.current_node == OrchestrationNode.DEBUG:
-            return run_debug(state)
+            return run_debug(state, validation_report=state.validation_report)
 
         if state.current_node == OrchestrationNode.DONE:
             return model_copy_compat(state, update={"status": RunStatus.COMPLETED})

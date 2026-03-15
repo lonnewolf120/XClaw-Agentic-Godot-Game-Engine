@@ -285,6 +285,154 @@ Apply minimum controls:
 
 ---
 
+## ADR-013 — Temporary Runtime Fallback for Headless Validation/Export
+
+**Date:** 2026-03-14  
+**Status:** Accepted (Temporary)  
+**Owner:** DevOps Lead
+
+### Context
+Current local environment lacks a direct Godot 4.6.1 CLI/runtime image, which blocks immediate headless validation and export execution evidence.
+
+### Decision
+Use Docker image `barichello/godot-ci:4.5.1` as a temporary fallback for:
+1. Headless import/check/smoke validation.
+2. Windows export command execution.
+
+Preserve the requirement to rerun all critical evidence once a 4.6.1-compatible runtime is available.
+
+### Consequences
+- Unblocks milestone execution and evidence collection.
+- Introduces version-parity risk against target 4.6.1 behavior.
+- Requires follow-up parity verification before release sign-off.
+
+### Supersedes
+- Superseded by ADR-014 once 4.6.1 runtime parity is established.
+
+---
+
+## ADR-014 — Runtime Parity Pin on Godot 4.6.1
+
+**Date:** 2026-03-14  
+**Status:** Accepted  
+**Owner:** DevOps Lead
+
+### Context
+Project target requires Godot 4.6.1 parity for headless validation and export evidence.
+
+### Decision
+Pin runtime verification to Docker image `barichello/godot-ci:4.6.1` and treat it as the baseline parity runtime for M2/M3 checks until a native local 4.6.1 CLI is provisioned.
+
+### Consequences
+- Validation and export evidence now align with target runtime major/minor/patch.
+- Removes version-parity blocker B-003.
+- Keeps local execution reproducible through pinned container runtime.
+
+---
+
+## ADR-015 — Needs-Human Escalation Artifacts + Benchmark Trend Baseline
+
+**Date:** 2026-03-14  
+**Status:** Accepted  
+**Owner:** PM + Reliability Lead
+
+### Context
+Runs that exhaust retries need deterministic handoff to human operators, and benchmark health requires historical trend evidence instead of one-off pass/fail snapshots.
+
+### Decision
+1. On `needs_human`, auto-generate escalation ticket artifacts:
+  - `runs/<run_id>/.vibe/escalation/needs_human_ticket.json`
+  - queue append in `runs/needs_human_queue.jsonl`
+2. Expand deterministic benchmark corpus to versioned file:
+  - `vibe-game-engine/benchmarks/prompt_corpus_v1.txt`
+3. Persist benchmark outputs each run:
+  - `vibe-game-engine/benchmarks/results/latest.json`
+  - `vibe-game-engine/benchmarks/results/history.jsonl`
+4. Enforce deterministic checks in CI workflow for tests + smoke + benchmark.
+
+### Consequences
+- Human escalation becomes auditable and queue-driven.
+- Reliability trends are measurable over time.
+- CI catches regressions before merge with consistent validation commands.
+
+---
+
+## ADR-016 — Operational Policy Lock for D-001, D-002, D-003
+
+**Date:** 2026-03-15  
+**Status:** Accepted  
+**Owner:** PM + QA Lead
+
+### Context
+Decision queue items D-001/D-002/D-003 were pending and blocking downstream implementation consistency for run paths, smoke thresholds, and asset fallback capacity.
+
+### Decision
+Lock machine-readable operational policies in:
+- `vibe-game-engine/config/operational_policies.json`
+
+Policy values:
+1. `D-001`: Canonical run workspace root is `runs/<run_id>`.
+2. `D-002`: Minimum smoke durations are target-specific (Windows/Linux: 120s, Web/Android: 90s).
+3. `D-003`: Starter fallback asset library scope is capped at 32 total assets with explicit category and format constraints.
+
+### Consequences
+- All automation now references one source for these policy values.
+- Reduces drift between docs, scripts, and validation behavior.
+- Enables deterministic gate scripts to enforce policy directly.
+
+---
+
+## ADR-017 — Central Dashboard Command Center Architecture
+
+**Date:** 2026-03-15  
+**Status:** Accepted  
+**Owner:** Platform + Frontend Leads
+
+### Context
+Operational visibility and control were CLI-fragmented, reducing real-time awareness of agent activity and slowing routine command execution.
+
+### Decision
+Implement local command-center architecture:
+1. Backend API server: `vibe-game-engine/scripts/dashboard_server.py`.
+2. Web UI: `vibe-game-engine/dashboard/` static app.
+3. Whitelisted command execution from UI (tests, smoke, benchmark, asset gate, escalation triage).
+4. Telemetry polling for KPI cards, agent state panel, recent runs, and command job history.
+
+### Consequences
+- Operators can launch and monitor core workflows from a single interface.
+- Improves observability without introducing external infrastructure dependencies.
+- Keeps command execution constrained to an explicit allowlist for safety.
+
+---
+
+## ADR-018 — Dashboard Frontend Stack Migration to Next.js + Tailwind
+
+**Date:** 2026-03-15  
+**Status:** Accepted  
+**Owner:** Frontend + Platform Leads
+
+### Context
+Operator preference requires a Next.js-based dashboard with TailwindCSS instead of the prior static HTML/CSS/JS implementation.
+
+### Decision
+Implement dashboard UI and API layer in:
+- `vibe-game-engine/dashboard-nextjs/`
+
+Use stack:
+1. Next.js App Router
+2. TailwindCSS styling
+3. API routes for overview, jobs, commands, and command execution
+
+Add compatibility launcher at:
+- `scripts/dashboard_server.py`
+
+### Consequences
+- Dashboard development now uses modern React/Next patterns.
+- Command center remains local-first with the same allowlisted operational commands.
+- Prior static dashboard remains in repo history but is superseded operationally.
+
+---
+
 ## ADR Template (for new entries)
 
 ```text

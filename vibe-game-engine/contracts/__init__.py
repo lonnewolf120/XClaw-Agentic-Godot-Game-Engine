@@ -17,6 +17,7 @@ from contracts.run_state import (
     RunState,
     RunStatus,
 )
+from contracts.task_graph import TaskGraph, TaskNode, TaskPriority, TaskType
 from contracts.validation import (
     ValidationIssue,
     ValidationReport,
@@ -46,6 +47,10 @@ __all__ = [
     "RunState",
     "RunStatus",
     "ScopeGuardrails",
+    "TaskGraph",
+    "TaskNode",
+    "TaskPriority",
+    "TaskType",
     "ValidationIssue",
     "ValidationReport",
     "ValidationSeverity",

@@ -7,6 +7,7 @@ from pydantic import Field, StrictStr, conint
 
 from contracts.base import StrictModel
 from contracts.export import ExportResult
+from contracts.godot_patch import PatchBatch
 from contracts.validation import ValidationReport
 
 PositiveStrictInt = conint(strict=True, ge=1)
@@ -69,5 +70,6 @@ class RunState(StrictModel):
 
     validation_report: Optional[ValidationReport] = None
     export_result: Optional[ExportResult] = None
+    proposed_patch_batch: Optional[PatchBatch] = None
 
     failure_reason: Optional[StrictStr] = None
