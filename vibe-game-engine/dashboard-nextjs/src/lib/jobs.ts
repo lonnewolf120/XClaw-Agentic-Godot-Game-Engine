@@ -32,6 +32,14 @@ export function startJob(commandId: string): CommandJob {
     throw new Error("unsupported command");
   }
 
+  return startCustomJob(commandId, config.command, config.cwd);
+}
+
+export function startCustomJob(commandId: string, command: string[], cwd: string): CommandJob {
+  if (command.length === 0) {
+    throw new Error("command must not be empty");
+  }
+
   const job: CommandJob = {
     jobId: `job-${Date.now()}`,
     commandId,
@@ -45,14 +53,14 @@ export function startJob(commandId: string): CommandJob {
   const logPath = path.join(logDir, `${job.jobId}.log`);
   job.logPath = logPath;
 
-  const [cmd, ...args] = config.command;
+  const [cmd, ...args] = command;
   const child = spawn(cmd, args, {
-    cwd: config.cwd,
+    cwd,
     stdio: ["ignore", "pipe", "pipe"],
   });
 
   const logStream = fs.createWriteStream(logPath, { flags: "w" });
-  logStream.write(`[${utcNow()}] START ${commandId}\n${config.command.join(" ")}\n\n`);
+  logStream.write(`[${utcNow()}] START ${commandId}\n${command.join(" ")}\n\n`);
   child.stdout.on("data", (chunk: Buffer) => logStream.write(chunk));
   child.stderr.on("data", (chunk: Buffer) => logStream.write(chunk));
 

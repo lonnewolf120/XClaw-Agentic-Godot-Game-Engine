@@ -55,6 +55,7 @@ Deliver runtime parity on Godot 4.6.1, integrate prompt-template agent invocatio
 | M3-104 | M3 | Automate needs-human queue triage summary | Ops Agent | P0 | `done` | ENG-304 | Triage summary generated from queue in deterministic categories |
 | M4-001 | M4 | Build central dashboard command center UI | Frontend Agent | P0 | `done` | ENG-303 | UI shows KPIs, agent states, run timeline, and command controls |
 | M4-002 | M4 | Add dashboard backend API + command runner | Platform Agent | P0 | `done` | M4-001 | Local server serves overview + command/job APIs |
+| ENG-305 | M3 | Implement game creation pipeline entrypoint | Coding Agent | P0 | `done` | ENG-303 | Prompt-to-project flow creates run workspace, applies patches, validates structure, and persists run bundle |
 
 ---
 

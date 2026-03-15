@@ -36,6 +36,11 @@ const EMPTY: SystemSnapshot = {
     commandAllowlist: [],
     composeFiles: [],
   },
+  gameCreation: {
+    latestRun: null,
+    recentRuns: [],
+    availableModes: [],
+  },
   logs: [],
 };
 

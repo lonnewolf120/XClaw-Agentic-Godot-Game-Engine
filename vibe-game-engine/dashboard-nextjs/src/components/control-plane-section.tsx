@@ -6,6 +6,8 @@ import AgentTable from "./sections/agent-table";
 import CommandLauncher from "./sections/command-launcher";
 import ConfigPanel from "./sections/config-panel";
 import EnginePanel from "./sections/engine-panel";
+import GameBuilderPanel from "./sections/game-builder-panel";
+import GameRunSnapshotPanel from "./sections/game-run-snapshot-panel";
 import JobBoard from "./sections/job-board";
 import KpiGrid from "./sections/kpi-grid";
 import LogTailPanel from "./sections/log-tail-panel";
@@ -63,6 +65,24 @@ export default function ControlPlaneSection({ section }: { section: DashboardSec
     }
   }
 
+  async function createGame(prompt: string, mode: string) {
+    try {
+      const response = await fetch("/api/game/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, mode }),
+      });
+      if (!response.ok) {
+        throw new Error(`game creation launch failed: ${response.status}`);
+      }
+      setRunError("");
+      await refresh();
+    } catch (err) {
+      setRunError(String(err));
+      throw err;
+    }
+  }
+
   const benchmarkPercent = useMemo(
     () => `${Math.round((snapshot.overview.kpis.benchmarkSuccessRate || 0) * 100)}%`,
     [snapshot.overview.kpis.benchmarkSuccessRate]
@@ -112,6 +132,8 @@ export default function ControlPlaneSection({ section }: { section: DashboardSec
 
       {section === "engine" ? (
         <>
+          <GameBuilderPanel modes={snapshot.gameCreation.availableModes} onCreate={createGame} />
+          <GameRunSnapshotPanel gameCreation={snapshot.gameCreation} />
           <EnginePanel engine={snapshot.engine} />
           <RunList runs={snapshot.overview.recentRuns} />
         </>

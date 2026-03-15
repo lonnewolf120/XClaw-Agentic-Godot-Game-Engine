@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 
 import { COMMANDS, PROJECT_ROOT } from "./commands";
+import { buildGameCreationSnapshot } from "./game";
 import { listJobs } from "./jobs";
 import { buildOverview } from "./overview";
 
@@ -76,6 +77,7 @@ export function buildSystemSnapshot() {
   const overview = buildOverview();
   const jobs = listJobs();
   const logs = listRecentLogs();
+  const gameCreation = buildGameCreationSnapshot();
 
   const templatesDir = path.join(PROJECT_ROOT, "templates");
   const runsDir = path.join(PROJECT_ROOT, "runs");
@@ -111,6 +113,7 @@ export function buildSystemSnapshot() {
         "PROJECT_MANAGEMENT/MASTER_PLAN.md",
       ],
     },
+    gameCreation,
     logs,
   };
 }

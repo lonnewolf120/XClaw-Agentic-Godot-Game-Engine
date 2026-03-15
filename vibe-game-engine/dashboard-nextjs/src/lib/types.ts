@@ -31,6 +31,18 @@ export interface LogSummary {
   modifiedUtc: string;
 }
 
+export interface GameRunSummary {
+  runId: string;
+  prompt: string;
+  mode: string;
+  status: string;
+  retryCount: number;
+  validationSummary: string;
+  projectDir: string;
+  runBundlePath: string;
+  createdAtUtc: string;
+}
+
 export interface SystemSnapshot {
   timestampUtc: string;
   overview: OverviewPayload;
@@ -51,6 +63,11 @@ export interface SystemSnapshot {
     pythonExecutable: string;
     commandAllowlist: Array<{ id: string; label: string; cwd: string; command: string[] }>;
     composeFiles: string[];
+  };
+  gameCreation: {
+    latestRun: GameRunSummary | null;
+    recentRuns: GameRunSummary[];
+    availableModes: string[];
   };
   logs: LogSummary[];
 }

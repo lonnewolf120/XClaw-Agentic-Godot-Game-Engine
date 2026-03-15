@@ -58,11 +58,24 @@ function agentStates(): Array<{ name: string; state: "active" | "idle" }> {
       .filter((job) => job.status === "running")
       .map((job) => job.commandId)
   );
+  const gameGenerationActive = runningCommandIds.has("create_game_prompt");
   return [
-    { name: "Project Manager", state: runningCommandIds.has("run_benchmark") ? "active" : "idle" },
-    { name: "Coordinator", state: runningCommandIds.has("run_smoke") ? "active" : "idle" },
-    { name: "Coding Agent", state: runningCommandIds.has("run_smoke") ? "active" : "idle" },
-    { name: "Debugger Agent", state: runningCommandIds.has("run_smoke") ? "active" : "idle" },
+    {
+      name: "Project Manager",
+      state: runningCommandIds.has("run_benchmark") || gameGenerationActive ? "active" : "idle",
+    },
+    {
+      name: "Coordinator",
+      state: runningCommandIds.has("run_smoke") || gameGenerationActive ? "active" : "idle",
+    },
+    {
+      name: "Coding Agent",
+      state: runningCommandIds.has("run_smoke") || gameGenerationActive ? "active" : "idle",
+    },
+    {
+      name: "Debugger Agent",
+      state: runningCommandIds.has("run_smoke") || gameGenerationActive ? "active" : "idle",
+    },
     { name: "Exporter Agent", state: "idle" },
     { name: "QA Agent", state: runningCommandIds.has("run_tests") ? "active" : "idle" },
   ];
