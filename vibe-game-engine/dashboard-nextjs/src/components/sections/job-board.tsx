@@ -4,14 +4,16 @@ export default function JobBoard({ jobs }: { jobs: CommandJob[] }) {
   const running = jobs.filter((job) => job.status === "running");
   const completed = jobs.filter((job) => job.status === "completed");
   const failed = jobs.filter((job) => job.status === "failed");
+  const cancelled = jobs.filter((job) => job.status === "cancelled");
 
   return (
     <section className="rounded-xl border border-slate-700 bg-panel/90 p-4 shadow-panel">
       <h3 className="font-display text-xl">Job Board</h3>
-      <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-4">
         <JobColumn title={`Running (${running.length})`} jobs={running} />
-        <JobColumn title={`Completed (${completed.length})`} jobs={completed.slice(0, 12)} />
-        <JobColumn title={`Failed (${failed.length})`} jobs={failed.slice(0, 12)} />
+        <JobColumn title={`Completed (${completed.length})`} jobs={completed.slice(0, 10)} />
+        <JobColumn title={`Failed (${failed.length})`} jobs={failed.slice(0, 10)} />
+        <JobColumn title={`Cancelled (${cancelled.length})`} jobs={cancelled.slice(0, 10)} />
       </div>
     </section>
   );

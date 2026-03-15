@@ -409,3 +409,57 @@
   - Result: `project_dir=vibe-game-engine/runs/run-20260315004040/project`
   - Result: `run_bundle=vibe-game-engine/runs/run-20260315004040/run_bundle.json`
 
+---
+
+## 2026-03-15 (Game Creation Pipeline: Optional Export + Manifest)
+
+### Scope Executed
+- Extended game creation pipeline to support optional artifact export and final manifest generation.
+- Added strict export mode to fail run status when export is required but unsuccessful.
+- Kept backward-compatible default behavior (export not required unless requested).
+
+### Implemented/Updated Files
+- `vibe-game-engine/orchestration/game_creation.py`
+- `vibe-game-engine/scripts/create_game_from_prompt.py`
+- `vibe-game-engine/tests/test_game_creation_engine.py`
+- `PROJECT_MANAGEMENT/TASK_BOARD.md`
+- `PROJECT_MANAGEMENT/PROGRESS_LOG.md`
+
+### Validation Evidence
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" -m pytest tests/test_game_creation_engine.py -q` -> `5 passed in 0.19s`
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" -m pytest tests -q` -> `32 passed in 0.30s`
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" scripts/create_game_from_prompt.py --prompt "Create a tiny 2D platformer with jump and one enemy"`
+  - Result: `final_status=RunStatus.COMPLETED`
+  - Result: `export_success=not_requested`
+  - Result: `run_bundle=vibe-game-engine/runs/run-20260315005359/run_bundle.json`
+
+---
+
+## 2026-03-15 (Dashboard Real-Time Runtime Control Upgrade)
+
+### Scope Executed
+- Added live runtime control panel for create-game flows (launch/relaunch/cancel).
+- Added structured execution timeline panel from stage-level events (not raw logs only).
+- Added backend job cancellation endpoint and runtime support for cancelled status.
+- Added engine-page log auto-focus for active create-game job output.
+
+### Implemented/Updated Files
+- `vibe-game-engine/dashboard-nextjs/src/lib/jobs.ts`
+- `vibe-game-engine/dashboard-nextjs/src/lib/types.ts`
+- `vibe-game-engine/dashboard-nextjs/src/app/api/jobs/[jobId]/cancel/route.ts`
+- `vibe-game-engine/dashboard-nextjs/src/components/control-plane-section.tsx`
+- `vibe-game-engine/dashboard-nextjs/src/components/sections/log-tail-panel.tsx`
+- `vibe-game-engine/dashboard-nextjs/src/components/sections/job-board.tsx`
+- `vibe-game-engine/dashboard-nextjs/src/components/sections/game-runtime-control-panel.tsx`
+- `vibe-game-engine/dashboard-nextjs/src/components/sections/game-execution-timeline-panel.tsx`
+- `vibe-game-engine/orchestration/game_creation.py`
+- `vibe-game-engine/scripts/create_game_from_prompt.py`
+- `PROJECT_MANAGEMENT/TASK_BOARD.md`
+- `PROJECT_MANAGEMENT/PROGRESS_LOG.md`
+
+### Validation Evidence
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" -m pytest tests/test_game_creation_engine.py -q` -> `5 passed in 0.19s`
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" scripts/create_game_from_prompt.py --prompt "Create a tiny 2D platformer with jump and one enemy"` produced stage-stream output (`RUN_INIT`, `PM_AGENT`, `COORDINATOR`, `VALIDATION`, `RUN_DONE`).
+- `npx tsc --noEmit` (in `vibe-game-engine/dashboard-nextjs`) -> pass
+- `npm run build` (in `vibe-game-engine/dashboard-nextjs`) -> pass; includes route `api/jobs/[jobId]/cancel`
+

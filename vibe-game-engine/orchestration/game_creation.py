@@ -6,7 +6,7 @@ import shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from agents.debugger_agent import apply_patch_batch
 from agents.exporter_agent import build_final_manifest, export_project
@@ -51,14 +51,23 @@ class GameCreationEngine:
         enable_export: bool = False,
         strict_export: bool = False,
         godot_exe: str | None = None,
+        progress_callback: Callable[[str], None] | None = None,
     ) -> GameCreationResult:
+        self._emit(progress_callback, "RUN_INIT", f"prompt_received length={len(prompt.strip())} mode={mode.value}")
         spec, task_graph, _ = self.runtime.invoke_project_manager(prompt)
+        self._emit(
+            progress_callback,
+            "PM_AGENT",
+            f"project_spec_ready title={spec.title} mechanics={len(spec.core_mechanics)} template={spec.selected_template}",
+        )
         run_id = self._build_run_id()
+        self._emit(progress_callback, "RUN_ID", f"assigned run_id={run_id}")
 
         spec = model_copy_compat(spec, update={"run_id": run_id, "mode": mode})
         task_graph = model_copy_compat(task_graph, update={"run_id": run_id})
 
         project_dir = self._bootstrap_project(spec.selected_template, run_id)
+        self._emit(progress_callback, "BOOTSTRAP", f"template_copied project_dir={project_dir}")
         state = RunState(
             run_id=run_id,
             prompt=prompt,
@@ -70,23 +79,42 @@ class GameCreationEngine:
         )
 
         state, _ = self.runtime.invoke_coordinator(state, task_graph)
+        self._emit(progress_callback, "COORDINATOR", f"node_transition current_node={state.current_node.value} status={state.status.value}")
         state, _ = self.runtime.invoke_coordinator(state, task_graph)
+        self._emit(progress_callback, "COORDINATOR", f"node_transition current_node={state.current_node.value} status={state.status.value}")
 
         patch_batch, _ = self.runtime.invoke_coding_agent(task_graph)
+        self._emit(progress_callback, "CODING_AGENT", f"patch_batch_generated patches={len(patch_batch.patches)}")
         last_report: ValidationReport | None = None
         applied_batches: list[PatchBatch] = []
 
         while True:
             apply_patch_batch(str(project_dir), patch_batch)
             applied_batches.append(patch_batch)
+            self._emit(
+                progress_callback,
+                "PATCH_APPLY",
+                f"applied_batch attempt={len(applied_batches)} files={len(patch_batch.patches)}",
+            )
             attempt = state.retry_count + 1
             last_report = self._validate_project_structure(run_id=run_id, attempt=attempt, project_dir=project_dir)
+            self._emit(
+                progress_callback,
+                "VALIDATION",
+                f"attempt={attempt} success={last_report.success} fatal={last_report.fatal_count} error={last_report.error_count}",
+            )
             state, _ = self.runtime.invoke_coordinator(state, task_graph, validation_report=last_report)
+            self._emit(
+                progress_callback,
+                "COORDINATOR",
+                f"post_validation status={state.status.value} retry_count={state.retry_count}",
+            )
 
             if state.status == RunStatus.COMPLETED:
                 break
 
             if state.status in {RunStatus.NEEDS_HUMAN, RunStatus.FAILED}:
+                self._emit(progress_callback, "RUN_TERMINAL", f"status={state.status.value} reason={state.failure_reason or 'n/a'}")
                 break
 
             if state.status != RunStatus.DEBUGGING:
@@ -94,6 +122,11 @@ class GameCreationEngine:
 
             state, _ = self.runtime.invoke_coordinator(state, task_graph)
             patch_batch = state.proposed_patch_batch or patch_batch
+            self._emit(
+                progress_callback,
+                "DEBUGGER_AGENT",
+                f"debug_patch_prepared patches={len(patch_batch.patches)}",
+            )
 
         if last_report is None:
             raise RuntimeError("No validation report produced")
@@ -101,10 +134,16 @@ class GameCreationEngine:
         export_result: Optional[ExportResult] = None
         final_manifest_path: Optional[Path] = None
         if enable_export and state.status == RunStatus.COMPLETED and mode != RunMode.PROJECT_ONLY:
+            self._emit(progress_callback, "EXPORT", "export_requested")
             export_result = self._export_project(
                 run_id=run_id,
                 project_dir=project_dir,
                 godot_exe=godot_exe,
+            )
+            self._emit(
+                progress_callback,
+                "EXPORT",
+                f"export_completed success={export_result.success} error={export_result.error_summary or 'none'}",
             )
             if export_result.success:
                 final_manifest_path = self._write_final_manifest(
@@ -117,6 +156,7 @@ class GameCreationEngine:
                     applied_batches=applied_batches,
                     run_id_dir=project_dir.parent,
                 )
+                self._emit(progress_callback, "MANIFEST", f"final_manifest_written path={final_manifest_path}")
             elif strict_export:
                 state = model_copy_compat(
                     state,
@@ -125,6 +165,7 @@ class GameCreationEngine:
                         "failure_reason": f"export_failed: {export_result.error_summary}",
                     },
                 )
+                self._emit(progress_callback, "RUN_TERMINAL", f"status={state.status.value} reason={state.failure_reason}")
 
         run_bundle_path = self._write_run_bundle(
             run_id=run_id,
@@ -136,6 +177,8 @@ class GameCreationEngine:
             export_result=export_result,
             final_manifest_path=final_manifest_path,
         )
+        self._emit(progress_callback, "RUN_BUNDLE", f"bundle_written path={run_bundle_path}")
+        self._emit(progress_callback, "RUN_DONE", f"status={state.status.value} retries={state.retry_count}")
 
         return GameCreationResult(
             run_id=run_id,
@@ -318,3 +361,10 @@ class GameCreationEngine:
         if hasattr(model, "model_dump"):
             return model.model_dump()
         return model.dict()
+
+    @staticmethod
+    def _emit(progress_callback: Callable[[str], None] | None, stage: str, message: str) -> None:
+        if progress_callback is None:
+            return
+        ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        progress_callback(f"[{ts}] [{stage}] {message}")

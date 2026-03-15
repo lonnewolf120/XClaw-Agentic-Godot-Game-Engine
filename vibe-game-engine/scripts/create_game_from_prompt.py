@@ -41,12 +41,20 @@ def main() -> int:
     args = parse_args()
     workspace_root = Path(__file__).resolve().parents[1]
     engine = GameCreationEngine(workspace_root=workspace_root)
+
+    def _progress(line: str) -> None:
+        print(line, flush=True)
+
+    print("[CLI] create_game_from_prompt started", flush=True)
+    print(f"[CLI] mode={args.mode} with_export={args.with_export} strict_export={args.strict_export}", flush=True)
+
     result = engine.create_from_prompt(
         prompt=args.prompt,
         mode=RunMode(args.mode),
         enable_export=args.with_export,
         strict_export=args.strict_export,
         godot_exe=args.godot_exe,
+        progress_callback=_progress,
     )
 
     print(f"run_id={result.run_id}")
@@ -57,6 +65,7 @@ def main() -> int:
     print(f"export_success={result.export_result.success if result.export_result is not None else 'not_requested'}")
     print(f"final_manifest={result.final_manifest_path if result.final_manifest_path is not None else 'n/a'}")
     print(f"run_bundle={result.run_bundle_path}")
+    print("[CLI] create_game_from_prompt finished", flush=True)
 
     return 0 if result.status == RunStatus.COMPLETED else 1
 

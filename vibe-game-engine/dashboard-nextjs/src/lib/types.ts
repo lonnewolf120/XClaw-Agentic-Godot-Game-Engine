@@ -1,5 +1,5 @@
 export type AgentState = "active" | "idle";
-export type JobStatus = "running" | "completed" | "failed";
+export type JobStatus = "running" | "completed" | "failed" | "cancelled";
 
 export interface OverviewPayload {
   timestampUtc: string;
@@ -22,6 +22,7 @@ export interface CommandJob {
   endedAtUtc?: string;
   returnCode?: number;
   logPath?: string;
+  message?: string;
 }
 
 export interface LogSummary {

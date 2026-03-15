@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { spawn } from "child_process";
+import type { ChildProcess } from "child_process";
 
 import { COMMANDS, PROJECT_ROOT } from "./commands";
 
-export type JobStatus = "running" | "completed" | "failed";
+export type JobStatus = "running" | "completed" | "failed" | "cancelled";
 
 export interface CommandJob {
   jobId: string;
@@ -14,9 +15,11 @@ export interface CommandJob {
   endedAtUtc?: string;
   returnCode?: number;
   logPath?: string;
+  message?: string;
 }
 
 const jobs = new Map<string, CommandJob>();
+const runningChildren = new Map<string, ChildProcess>();
 
 function utcNow(): string {
   return new Date().toISOString();
@@ -58,6 +61,7 @@ export function startCustomJob(commandId: string, command: string[], cwd: string
     cwd,
     stdio: ["ignore", "pipe", "pipe"],
   });
+  runningChildren.set(job.jobId, child);
 
   const logStream = fs.createWriteStream(logPath, { flags: "w" });
   logStream.write(`[${utcNow()}] START ${commandId}\n${command.join(" ")}\n\n`);
@@ -66,11 +70,43 @@ export function startCustomJob(commandId: string, command: string[], cwd: string
 
   child.on("close", (code: number | null) => {
     job.endedAtUtc = utcNow();
-    job.returnCode = code ?? -1;
-    job.status = code === 0 ? "completed" : "failed";
+    const finalCode = code ?? -1;
+    job.returnCode = finalCode;
+    if (job.status !== "cancelled") {
+      job.status = finalCode === 0 ? "completed" : "failed";
+    }
     jobs.set(job.jobId, job);
+    runningChildren.delete(job.jobId);
     logStream.end();
   });
 
+  return job;
+}
+
+export function cancelJob(jobId: string): CommandJob {
+  const job = jobs.get(jobId);
+  if (!job) {
+    throw new Error("job not found");
+  }
+  if (job.status !== "running") {
+    return job;
+  }
+
+  const child = runningChildren.get(jobId);
+  if (!child) {
+    job.status = "failed";
+    job.endedAtUtc = utcNow();
+    job.returnCode = -1;
+    job.message = "process handle missing while cancelling";
+    jobs.set(jobId, job);
+    return job;
+  }
+
+  child.kill("SIGTERM");
+  job.status = "cancelled";
+  job.endedAtUtc = utcNow();
+  job.returnCode = -15;
+  job.message = "cancelled by user";
+  jobs.set(jobId, job);
   return job;
 }

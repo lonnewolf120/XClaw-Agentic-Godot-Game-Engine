@@ -6,7 +6,9 @@ import AgentTable from "./sections/agent-table";
 import CommandLauncher from "./sections/command-launcher";
 import ConfigPanel from "./sections/config-panel";
 import EnginePanel from "./sections/engine-panel";
+import GameExecutionTimelinePanel from "./sections/game-execution-timeline-panel";
 import GameBuilderPanel from "./sections/game-builder-panel";
+import GameRuntimeControlPanel from "./sections/game-runtime-control-panel";
 import GameRunSnapshotPanel from "./sections/game-run-snapshot-panel";
 import JobBoard from "./sections/job-board";
 import KpiGrid from "./sections/kpi-grid";
@@ -47,6 +49,7 @@ const TITLES: Record<DashboardSection, { title: string; description: string }> =
 export default function ControlPlaneSection({ section }: { section: DashboardSection }) {
   const { snapshot, isLoading, error, refresh, activeJobs } = useSystemSnapshot();
   const [runError, setRunError] = useState("");
+  const [createGameLogFile, setCreateGameLogFile] = useState("");
 
   async function runCommand(commandId: string) {
     try {
@@ -75,12 +78,34 @@ export default function ControlPlaneSection({ section }: { section: DashboardSec
       if (!response.ok) {
         throw new Error(`game creation launch failed: ${response.status}`);
       }
+      const payload = (await response.json()) as {
+        job?: {
+          commandId?: string;
+          logPath?: string;
+        };
+      };
+      const logPath = payload.job?.logPath;
+      if (payload.job?.commandId === "create_game_prompt" && logPath) {
+        const normalized = logPath.replace(/\\/g, "/");
+        const fileName = normalized.split("/").pop() ?? "";
+        setCreateGameLogFile(fileName);
+      }
       setRunError("");
       await refresh();
     } catch (err) {
       setRunError(String(err));
       throw err;
     }
+  }
+
+  async function cancelGameJob(jobId: string) {
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/cancel`, {
+      method: "POST",
+    });
+    if (!response.ok) {
+      throw new Error(`cancel failed: ${response.status}`);
+    }
+    await refresh();
   }
 
   const benchmarkPercent = useMemo(
@@ -132,7 +157,19 @@ export default function ControlPlaneSection({ section }: { section: DashboardSec
 
       {section === "engine" ? (
         <>
+          <GameRuntimeControlPanel
+            jobs={snapshot.jobs}
+            latestRun={snapshot.gameCreation.latestRun}
+            onCancel={cancelGameJob}
+            onLaunch={createGame}
+          />
           <GameBuilderPanel modes={snapshot.gameCreation.availableModes} onCreate={createGame} />
+          <GameExecutionTimelinePanel selectedFile={createGameLogFile} />
+          <LogTailPanel
+            logs={snapshot.logs}
+            preferredFile={createGameLogFile}
+            title="Game Creation Execution Logs"
+          />
           <GameRunSnapshotPanel gameCreation={snapshot.gameCreation} />
           <EnginePanel engine={snapshot.engine} />
           <RunList runs={snapshot.overview.recentRuns} />

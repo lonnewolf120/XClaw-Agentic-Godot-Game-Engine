@@ -9,7 +9,15 @@ interface LogPayload {
   lines: string[];
 }
 
-export default function LogTailPanel({ logs }: { logs: LogSummary[] }) {
+export default function LogTailPanel({
+  logs,
+  preferredFile,
+  title = "Log Tail",
+}: {
+  logs: LogSummary[];
+  preferredFile?: string;
+  title?: string;
+}) {
   const [selectedFile, setSelectedFile] = useState("");
   const [payload, setPayload] = useState<LogPayload | null>(null);
   const [error, setError] = useState("");
@@ -19,6 +27,14 @@ export default function LogTailPanel({ logs }: { logs: LogSummary[] }) {
       setSelectedFile(logs[0].fileName);
     }
   }, [logs, selectedFile]);
+
+  useEffect(() => {
+    if (!preferredFile) return;
+    const exists = logs.some((item) => item.fileName === preferredFile);
+    if (exists) {
+      setSelectedFile(preferredFile);
+    }
+  }, [preferredFile, logs]);
 
   useEffect(() => {
     if (!selectedFile) return;
@@ -49,7 +65,7 @@ export default function LogTailPanel({ logs }: { logs: LogSummary[] }) {
 
   return (
     <section className="rounded-xl border border-slate-700 bg-panel/90 p-4 shadow-panel">
-      <h3 className="font-display text-xl">Log Tail</h3>
+      <h3 className="font-display text-xl">{title}</h3>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <label className="text-xs uppercase tracking-[0.12em] text-muted">Log file</label>
         <select

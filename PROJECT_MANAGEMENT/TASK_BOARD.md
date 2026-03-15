@@ -56,6 +56,8 @@ Deliver runtime parity on Godot 4.6.1, integrate prompt-template agent invocatio
 | M4-001 | M4 | Build central dashboard command center UI | Frontend Agent | P0 | `done` | ENG-303 | UI shows KPIs, agent states, run timeline, and command controls |
 | M4-002 | M4 | Add dashboard backend API + command runner | Platform Agent | P0 | `done` | M4-001 | Local server serves overview + command/job APIs |
 | ENG-305 | M3 | Implement game creation pipeline entrypoint | Coding Agent | P0 | `done` | ENG-303 | Prompt-to-project flow creates run workspace, applies patches, validates structure, and persists run bundle |
+| ENG-306 | M3 | Add optional export+manifest to game creation pipeline | Coding Agent | P0 | `done` | ENG-305 | Pipeline can optionally export artifact, generate final manifest, and support strict export failure mode |
+| M4-006 | M4 | Add real-time game runtime control + timeline panels | Frontend Agent | P0 | `done` | M4-002, ENG-305 | Engine page supports launch/relaunch/cancel controls and structured live execution timeline for create-game jobs |
 
 ---
 
