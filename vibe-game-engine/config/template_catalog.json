@@ -1,0 +1,150 @@
+{
+  "version": "v1",
+  "default_template_path": "templates/base_2d_platformer",
+  "templates": [
+    {
+      "template_id": "base_2d_platformer",
+      "path": "templates/base_2d_platformer",
+      "dimension": "2d",
+      "tags": ["platformer", "jump", "side-scroller"],
+      "credit_cost_hint": 1,
+      "assets": [
+        {
+          "asset_id": "ui_button_set",
+          "category": "ui",
+          "local_path": "templates/base_2d_platformer/assets/ui/button_set.png",
+          "tags": ["ui", "hud", "buttons"],
+          "source": {
+            "provider": "Kenney",
+            "source_url": "https://kenney.nl/assets/ui-pack-rpg-expansion",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "jump_sfx",
+          "category": "sfx",
+          "local_path": "templates/base_2d_platformer/assets/sfx/jump.ogg",
+          "tags": ["jump", "player", "action"],
+          "source": {
+            "provider": "Freesound",
+            "source_url": "https://freesound.org",
+            "license": "CC0/Attribution",
+            "attribution": "Freesound contributors"
+          }
+        },
+        {
+          "asset_id": "platform_tiles",
+          "category": "tiles",
+          "local_path": "templates/base_2d_platformer/assets/tiles/platform_tiles.png",
+          "tags": ["tiles", "ground", "platform"],
+          "source": {
+            "provider": "Kenney",
+            "source_url": "https://kenney.nl/assets/platformer-pack-redux",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "topdown_shooter",
+      "path": "templates/topdown_shooter",
+      "dimension": "2d",
+      "tags": ["topdown", "shooter", "bullet", "arcade"],
+      "credit_cost_hint": 1,
+      "assets": [
+        {
+          "asset_id": "shooter_ui",
+          "category": "ui",
+          "local_path": "templates/topdown_shooter/assets/ui/hud.png",
+          "tags": ["ui", "score", "health"],
+          "source": {
+            "provider": "Kenney",
+            "source_url": "https://kenney.nl/assets/top-down-shooter",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "laser_sfx",
+          "category": "sfx",
+          "local_path": "templates/topdown_shooter/assets/sfx/laser.ogg",
+          "tags": ["laser", "weapon", "shot"],
+          "source": {
+            "provider": "Freesound",
+            "source_url": "https://freesound.org",
+            "license": "CC0/Attribution",
+            "attribution": "Freesound contributors"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "endless_runner",
+      "path": "templates/endless_runner",
+      "dimension": "2d",
+      "tags": ["runner", "endless", "obstacle"],
+      "credit_cost_hint": 1,
+      "assets": [
+        {
+          "asset_id": "runner_ui",
+          "category": "ui",
+          "local_path": "templates/endless_runner/assets/ui/runner_hud.png",
+          "tags": ["ui", "distance", "score"],
+          "source": {
+            "provider": "Kenney",
+            "source_url": "https://kenney.nl/assets/ui-pack",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "runner_music",
+          "category": "music",
+          "local_path": "templates/endless_runner/assets/music/loop.ogg",
+          "tags": ["music", "loop", "arcade"],
+          "source": {
+            "provider": "Pixabay",
+            "source_url": "https://pixabay.com/music",
+            "license": "Pixabay Content License",
+            "attribution": "Pixabay creators"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "micro_fps_3d",
+      "path": "templates/micro_fps_3d",
+      "dimension": "3d",
+      "tags": ["3d", "fps", "first-person", "arena"],
+      "credit_cost_hint": 2,
+      "assets": [
+        {
+          "asset_id": "arena_model",
+          "category": "models",
+          "local_path": "templates/micro_fps_3d/assets/models/arena.glb",
+          "tags": ["arena", "environment", "3d"],
+          "source": {
+            "provider": "Quaternius",
+            "source_url": "https://quaternius.com",
+            "license": "CC0",
+            "attribution": "Quaternius"
+          }
+        },
+        {
+          "asset_id": "intro_cutscene",
+          "category": "cutscenes",
+          "local_path": "templates/micro_fps_3d/assets/cutscenes/intro.webm",
+          "tags": ["intro", "story", "cinematic"],
+          "source": {
+            "provider": "Pixabay",
+            "source_url": "https://pixabay.com/videos",
+            "license": "Pixabay Content License",
+            "attribution": "Pixabay creators"
+          }
+        }
+      ]
+    }
+  ]
+}

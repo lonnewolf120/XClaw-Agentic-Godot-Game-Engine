@@ -18,6 +18,7 @@ from contracts.run_state import (
     RunStatus,
 )
 from contracts.task_graph import TaskGraph, TaskNode, TaskPriority, TaskType
+from contracts.template_catalog import AssetSource, TemplateAsset, TemplateCatalog, TemplateDefinition
 from contracts.validation import (
     ValidationIssue,
     ValidationReport,
@@ -51,6 +52,10 @@ __all__ = [
     "TaskNode",
     "TaskPriority",
     "TaskType",
+    "AssetSource",
+    "TemplateAsset",
+    "TemplateCatalog",
+    "TemplateDefinition",
     "ValidationIssue",
     "ValidationReport",
     "ValidationSeverity",

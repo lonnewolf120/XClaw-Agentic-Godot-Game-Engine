@@ -1,0 +1,5 @@
+{
+  "template_id": "base_2d_platformer",
+  "notes": "Place downloaded assets in matching folders. Keep source and license metadata in config/template_catalog.json.",
+  "folders": ["ui", "sfx", "tiles", "music", "images"]
+}

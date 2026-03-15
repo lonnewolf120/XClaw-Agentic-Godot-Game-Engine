@@ -5,6 +5,8 @@ Responsible for ingesting prompt, validating ProjectSpec, and creating orchestra
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from contracts.project_spec import (
     ComplexityTier,
     GameDimension,
@@ -15,6 +17,12 @@ from contracts.project_spec import (
 )
 from contracts.run_state import RunMode
 from contracts.task_graph import TaskGraph, TaskNode, TaskPriority, TaskType
+from tools.template_catalog import select_template_from_prompt
+
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_TEMPLATE_PATH = "templates/base_2d_platformer"
+TEMPLATE_CATALOG_PATH = WORKSPACE_ROOT / "config" / "template_catalog.json"
 
 
 def _infer_dimension(prompt: str) -> GameDimension:
@@ -38,15 +46,35 @@ def _infer_mechanics(prompt: str) -> list[str]:
     return mechanics
 
 
-def build_project_spec(prompt: str) -> ProjectSpec:
+def _infer_title(prompt: str) -> str:
+    words = [word for word in prompt.strip().split() if word]
+    if not words:
+        return "Vibe Generated Project"
+    preview = " ".join(words[:5])
+    return f"Vibe {preview.title()}"
+
+
+def build_project_spec(prompt: str, workspace_root: str | Path | None = None) -> ProjectSpec:
     """Create a minimal project specification from a natural language prompt."""
     normalized_prompt = prompt.strip()
     if not normalized_prompt:
         raise ValueError("prompt must not be empty")
 
+    selected_template = DEFAULT_TEMPLATE_PATH
+    search_root = Path(workspace_root) if workspace_root is not None else WORKSPACE_ROOT
+    if TEMPLATE_CATALOG_PATH.exists():
+        try:
+            selected_template = select_template_from_prompt(
+                prompt=normalized_prompt,
+                catalog_path=TEMPLATE_CATALOG_PATH,
+                workspace_root=search_root,
+            )
+        except (FileNotFoundError, ValueError):
+            selected_template = DEFAULT_TEMPLATE_PATH
+
     return ProjectSpec(
         run_id="run-seeded",
-        title="Vibe Generated Project",
+        title=_infer_title(normalized_prompt),
         mode=RunMode.STANDALONE,
         game_dimension=_infer_dimension(normalized_prompt),
         complexity=ComplexityTier.SMALL,
@@ -64,7 +92,7 @@ def build_project_spec(prompt: str) -> ProjectSpec:
             max_playable_characters=1,
             multiplayer_enabled=False,
         ),
-        selected_template="templates/base_2d_platformer",
+        selected_template=selected_template,
     )
 
 

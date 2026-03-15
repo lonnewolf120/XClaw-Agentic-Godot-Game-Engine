@@ -32,5 +32,18 @@
         "wav"
       ]
     }
+  },
+  "asset_resolution": {
+    "mode": "local_first",
+    "credit_budget_per_run": 100,
+    "max_generated_assets_per_run": 3,
+    "allowed_online_sources": [
+      "kenney.nl",
+      "quaternius.com",
+      "poly.pizza",
+      "opengameart.org",
+      "freesound.org",
+      "pixabay.com"
+    ]
   }
 }

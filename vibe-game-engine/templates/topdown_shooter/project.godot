@@ -1,0 +1,7 @@
+[application]
+config/name="VibeTopDownShooter"
+config/description="Starter top-down shooter template"
+run/main_scene="res://scenes/Main.tscn"
+
+[rendering]
+quality/driver_name="GLES3"

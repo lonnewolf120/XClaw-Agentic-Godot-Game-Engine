@@ -41,7 +41,7 @@ class GameCreationResult:
 class GameCreationEngine:
     def __init__(self, workspace_root: Path | str, runtime: AgentRuntime | None = None) -> None:
         self.workspace_root = Path(workspace_root)
-        self.runtime = runtime or AgentRuntime()
+        self.runtime = runtime or AgentRuntime(workspace_root=self.workspace_root)
 
     def create_from_prompt(
         self,

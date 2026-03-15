@@ -1,0 +1,5 @@
+{
+  "template_id": "topdown_shooter",
+  "folders": ["ui", "sfx", "sprites", "music"],
+  "notes": "Download pack assets and keep file names aligned with config/template_catalog.json."
+}

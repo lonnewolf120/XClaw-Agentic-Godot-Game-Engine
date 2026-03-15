@@ -24,9 +24,12 @@ def _load_prompt_template(template_name: str) -> str:
 
 
 class AgentRuntime:
+    def __init__(self, workspace_root: str | Path | None = None) -> None:
+        self.workspace_root = workspace_root
+
     def invoke_project_manager(self, prompt: str) -> tuple[ProjectSpec, TaskGraph, str]:
         template = _load_prompt_template("project_manager")
-        spec = build_project_spec(prompt)
+        spec = build_project_spec(prompt, workspace_root=self.workspace_root)
         graph = build_task_graph(spec)
         return spec, graph, template
 
