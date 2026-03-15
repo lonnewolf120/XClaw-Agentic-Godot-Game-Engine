@@ -460,3 +460,17 @@ Owner: <role/person>
 ## Change Log
 
 - **2026-03-14**: Initial ADR set created (ADR-001 to ADR-012).
+## [2026-03-16] Pivot to Reliability-First 4-Phase MVP
+- **Context:** External review indicated high risk of milestone failure due to multi-agent latency, asset pipeline complexity, and focusing on UX (Editor Plugin) too early.
+- **Decision:** Restructured MVP into Phase 0 (Determinism), Phase 1 (Reliability), Phase 2 (Agent Scaling), Phase 3 (Editor Plugin). MVP archetypes reduced to 3 (2D Platformer, Endless Runner, Narrative). Strict cost constraints (~.85/run).
+- **Implication:** Discarded 3D FPS, XR, multiplayer, 3D asset generation until post-MVP. UI development postponed until CI headless generator reliably hits 90-95% success after retries.
+
+## [2026-03-16] Stack Simplification & Role Reduction
+- **Context:** Follow-up architectural critique advised that the stack was over-composed. Multi-agent messaging layers cause opaque failures, the asset pipeline was too wide (3D/Video), and missing queueing/run-state persistence posed MVP infra risks.
+- **Decision:** 
+  1. **Shrink actors:** Reduced from 8 abstract agent roles to exactly 4 distinct runtime roles (Planner, Builder, Validator, Debugger). 'PM' and 'Coordinator' functions are now explicitly implemented via strict LangGraph nodes, NOT LLM loops.
+  2. **Tiered Validation:** Shifted from generic 'headless check' to 4 tiers (Static schema -> Editor-safe check -> Headless Boot -> Export build) to fail fast and cheaply.
+  3. **Tiered Model Routing:** LiteLLM routes specifically by workload (small local for RAG/summaries, heavier mix for planner/debugger).
+  4. **Backend Setup:** Splitting the FastAPI backend logically into API, Orchestrator, Queue/Worker runner, and Run-State DB.
+  5. **Knowledge Bases:** Separating knowledge into Project Intelligence (local graphs/patterns) vs. Public Knowledge (Chroma doc chunks) rather than pure unstructured RAG.
+- **Implication:** Lower overhead. More time spent on resilient task queueing, state persistence, caching, and explicit structural transitions instead of tuning unnecessary agent personas.

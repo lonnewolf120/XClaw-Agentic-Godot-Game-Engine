@@ -1,0 +1,22 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y sqlite3
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Same codebase, different entrypoint for async queue processing
+COPY ./contracts /app/contracts
+COPY ./store /app/store
+COPY ./workspace /app/workspace
+COPY ./workers /app/workers
+COPY ./orchestrator /app/orchestrator
+COPY ./agents /app/agents
+COPY ./generators /app/generators
+COPY ./validation /app/validation
+
+ENV PYTHONPATH=/app
+# Assume a dedicated worker script later, or just reuse processor module
+CMD ["python", "-m", "workers.standalone_worker"]

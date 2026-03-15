@@ -5,6 +5,7 @@ import json
 import logging
 import uuid
 import sys
+import subprocess
 from pathlib import Path
 from typing import Dict, Any
 
@@ -21,7 +22,7 @@ from tools.godot_ast import build_starter_platformer
 # For the fake bridge implementation, we will mock the engine state yields 
 # with cost-saving router logic inline.
 
-app = FastAPI(title="Vibe Engine API", version="0.1.0")
+app = FastAPI(title="GENESIS ENGINE API", version="0.1.0")
 
 # Allow CORS for Next.js
 app.add_middleware(
@@ -77,6 +78,28 @@ def fast_intent_router(prompt: str) -> dict:
 @app.get("/api/v1/health")
 async def health_check():
     return {"status": "ok", "service": "FastAPI Backend", "errors": []}
+
+@app.post("/api/v1/launch/{run_id}")
+async def launch_native_preview(run_id: str):
+    """
+    Spawns Godot locally for native preview. Disguised as 'Live Preview' for MVP.
+    """
+    try:
+        # Resolve path to one of our actual templates for the MVP
+        project_path = Path(__file__).resolve().parent.parent.parent / "templates" / "Starter-Kit-3D-Platformer"
+        
+        # NOTE: If 'godot' is not in your system PATH, change the executable name below to the full path.
+        # Example: godot_executable = r"C:\Program Files\Godot\Godot_v4.2.1-stable_win64.exe"
+        godot_executable = "D:\Software\Godot\Godot.exe"  # <-- Change this to your Godot executable path if not in PATH
+        
+        # We spawn Godot opening the project without waiting
+        subprocess.Popen([godot_executable, "-e", "--path", str(project_path)])
+        
+        return {"status": "success", "message": "Godot launched locally."}
+    except FileNotFoundError:
+        return {"status": "error", "message": f"Godot executable '{godot_executable}' not found. Please add your Godot Engine to your system PATH, or edit vibe-game-engine/api/server.py to point directly to your Godot .exe file."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.post("/api/v1/generate")
 async def start_generation(req: PromptRequest):

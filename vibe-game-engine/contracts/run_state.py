@@ -9,6 +9,8 @@ from contracts.base import StrictModel
 from contracts.export import ExportResult
 from contracts.godot_patch import PatchBatch
 from contracts.validation import ValidationReport
+from contracts.messages import PlanMessage, ActionSchemaMessage
+from typing import Dict, Any
 
 PositiveStrictInt = conint(strict=True, ge=1)
 NonNegativeStrictInt = conint(strict=True, ge=0)
@@ -34,6 +36,7 @@ class RunStatus(str, Enum):
 class OrchestrationNode(str, Enum):
     INTAKE = "intake"
     PLANNING = "planning"
+    BUILDING = "building"
     VALIDATION = "validation"
     DEBUG = "debug"
     DONE = "done"
@@ -57,6 +60,8 @@ class RunState(StrictModel):
 
     run_id: StrictStr
     prompt: StrictStr
+    context_snapshot: Dict[str, Any] = Field(default_factory=dict)
+    
     mode: RunMode = RunMode.STANDALONE
     status: RunStatus = RunStatus.INTAKE
     current_node: OrchestrationNode = OrchestrationNode.INTAKE
@@ -64,6 +69,9 @@ class RunState(StrictModel):
     retry_count: NonNegativeStrictInt = 0
     max_retries: RetryCapStrictInt = 3
     retry_events: List[RetryEvent] = Field(default_factory=list)
+
+    plan: Optional[PlanMessage] = None
+    action_history: List[ActionSchemaMessage] = Field(default_factory=list)
 
     workspace_dir: StrictStr
     artifacts: ArtifactLogBundle = Field(default_factory=ArtifactLogBundle)

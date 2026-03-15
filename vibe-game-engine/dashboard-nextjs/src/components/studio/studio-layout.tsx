@@ -48,7 +48,7 @@ export function StudioLayout() {
               <Bot className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-sm font-bold text-white leading-tight font-display tracking-wide">VIBE ENGINE <span className="text-amber-500/80">3D</span></h1>
+              <h1 className="text-sm font-bold text-white leading-tight font-display tracking-wide">GENESIS ENGINE <span className="text-amber-500/80">3D</span></h1>
               <span className="text-[10px] text-slate-500 font-mono">MVP BUILD .02</span>
             </div>
           </div>

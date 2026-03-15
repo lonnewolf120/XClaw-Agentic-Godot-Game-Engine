@@ -4,7 +4,34 @@
 **Date:** March 14, 2026  
 **Owner:** Project Manager + Coordinator Multi-Agent System  
 **Mission:** Convert natural-language game ideas into playable outputs in under 10 minutes with production reliability.
+High-Level Overview
+The Vibe Game Engine is a fully autonomous, multi-agent game generation system targeting Godot 4.6.1. It relies on AI orchestration to generate standalone executables or live-editable Godot projects from natural-language prompts in under 10 minutes.
 
+Architectural Paths
+Default (Standalone Export-First):
+Prompt → Planner → Code/Asset Agents → Import → Headless Validate → Debug Loop (max 3 retries) → Export → Package
+Optional (Live Bridge):
+Utilizes a WebSocket JSON-RPC bridge (godot-bridge-mcp-public) for live editor integration, with automatic fallback to standalone mode if disconnected.
+Core Platform Stack
+Orchestration: LangGraph state machine using CrewAI-style role boundaries for multi-agent coordination.
+LLM Routing: LiteLLM with a local-first policy (using DeepSeek-V3.2 via Ollama), falling back to OpenRouter.
+RAG (Retrieval-Augmented Generation): Chroma vector index containing official Godot 4.6.1 documentation and examples.
+Validation & CI: docker-godot-headless images for deterministic CI/headless operations, import checks, and logic testing.
+Local Asset Generation: FLUX.1 schnell (2D/Images), TripoSR (3D models), Wan2.6 (Video), and Stable Audio Open.
+Multi-Agent Operating Model
+The workload is distributed among specialized agents:
+
+Project Manager & Coordinator: Handle requirements, milestone gating, and task graph/dependency execution.
+Coding & Asset Agents: Generate Godot scenes, .gd scripts, and normalized audio/visual assets.
+Importer & Debugger: Manage resource importing, scene wiring, and parsing validation logs for root-cause fixes.
+Exporter & QA/Validator: Handle packaging, acceptance checks, and final manifest generation.
+Anti-Hallucination Controls
+A strict framework enforces code reliability and valid scene generation:
+
+Pydantic v2 Strict Schemas for all agent outputs.
+Pre-call RAG Grounding against Godot 4.6.1 concepts instead of legacy syntax.
+Few-shot Prompting utilizing proven .gd and .tscn patterns.
+Deterministic Validation Loop that applies self-correction patches up to 3 times before triggering a human checkpoint.
 ---
 
 ## 1) Product Goal

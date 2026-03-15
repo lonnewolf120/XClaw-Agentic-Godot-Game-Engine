@@ -18,28 +18,42 @@ class ValidationSeverity(str, Enum):
     FATAL = "fatal"
 
 
-class ValidationStage(str, Enum):
-    IMPORT = "import"
-    CHECK = "check"
-    SMOKE = "smoke"
+class ValidationTier(str, Enum):
+    STATIC_CHECK = "static_check"
+    EDITOR_SAFE = "editor_safe"
+    HEADLESS_SMOKE = "headless_smoke"
+    EXPORT_PROBE = "export_probe"
+
+
+class FailureClass(str, Enum):
+    SCHEMA_INVALID = "schema_invalid"
+    PATH_UNRESOLVED = "path_unresolved"
+    NODE_MISSING = "node_missing"
+    SIGNAL_TARGET_INVALID = "signal_target_invalid"
+    SCRIPT_PARSE_ERROR = "script_parse_error"
+    SCENE_IMPORT_ERROR = "scene_import_error"
+    HEADLESS_BOOT_FAIL = "headless_boot_fail"
+    EXPORT_FAIL = "export_fail"
+    UNKNOWN = "unknown"
 
 
 class ValidationIssue(StrictModel):
 
-    stage: ValidationStage
+    tier: ValidationTier
     severity: ValidationSeverity
+    failure_class: FailureClass
     message: StrictStr
     file_path: Optional[StrictStr] = None
     line: Optional[PositiveStrictInt] = None
-    matched_pattern: Optional[StrictStr] = None
+    context_snippet: Optional[StrictStr] = None
 
 
 class ValidationReport(StrictModel):
 
-    run_id: StrictStr
-    attempt: PositiveStrictInt
     success: StrictBool
     timed_out: StrictBool = False
+    completed_tiers: List[ValidationTier] = Field(default_factory=list)
+    failed_tier: Optional[ValidationTier] = None
     stage_logs: List[StrictStr] = Field(default_factory=list)
     issues: List[ValidationIssue] = Field(default_factory=list)
     fatal_count: NonNegativeStrictInt = 0

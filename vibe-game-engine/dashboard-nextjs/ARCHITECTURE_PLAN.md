@@ -1,4 +1,4 @@
-# Vibe Engine Dashboard OS - Component Plan
+# GENESIS ENGINE Dashboard OS - Component Plan
 
 ## Goal
 Build `dashboard-nextjs` into the operating system for the Vibe Game Engine:

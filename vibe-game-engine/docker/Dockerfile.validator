@@ -1,0 +1,28 @@
+# Start with a Godot headless base (matches the ADR-014/ADR-007 standard)
+# Note: robpc/godot-headless doesn't actually exist for 4.6.1 yet, it's a future marker in the design.
+# We will use an ubuntu base, install python, and assume the Godot binary strategy or use a real image if available.
+# For this prototype we will use python:3.10-slim and install the godot binary, or rely on a godot-ci image.
+FROM barichello/godot-ci:4.3 as godot_base
+
+# We need Python for our python validator runner
+FROM python:3.10-slim
+
+# Copy godot binary from the godot base image
+COPY --from=godot_base /usr/local/bin/godot /usr/local/bin/godot
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y sqlite3 ca-certificates curl
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy module sources
+COPY ./contracts /app/contracts
+COPY ./store /app/store
+COPY ./validation /app/validation
+
+ENV PYTHONPATH=/app
+# Run the validation script instead of orchestrator pipeline
+# In the real GCP Cloud Run Job, we would pass the workspace path as an env var or argument
+CMD ["python", "-m", "validation.cloud_run_validator_entrypoint"]

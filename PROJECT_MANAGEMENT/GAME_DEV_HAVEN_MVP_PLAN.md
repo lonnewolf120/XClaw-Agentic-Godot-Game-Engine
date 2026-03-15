@@ -182,6 +182,31 @@ Definition of done:
 
 1. New users can produce a playable output without reading docs first.
 
+## F7 - XClaw Native Godot AI Extension
+
+What users get:
+
+1. **Selection-aware scene surgery:** The agent detects the currently selected node/scene, understands the context hierarchy, and injects exactly what is needed (nodes, scripts, signals).
+2. **Action plans instead of raw text answers:** The AI output is a strict, deterministic JSON execution schema (`create_node`, `connect_signal`, `set_property`) that eliminates file text-formatting hallucinations.
+3. **Safe Auto-Fix & Undo Stack Integration:** Every generation cycle groups its actions using Godot's native `EditorUndoRedoManager`. A developer can press `Ctrl+Z` to perfectly revert a bad AI generation.
+4. **Multiple UX Flows:** Ask mode (preview), Agent mode (multi-step plan), Edit-Selection mode (local target), and Repair mode (log-driven fixing) running locally.
+
+Code to take/adapt:
+
+1. `godot-bridge-mcp-public/godot-addon/` (baseline for WebSocket networking into Editor plugins).
+2. `EditorInterface` and `EditorUndoRedoManager` APIs in GDScript.
+
+XClaw implementation instructions:
+
+1. Create `vibe-game-engine/godot-addons/xclaw_agentic_engine/` containing a fully typed `EditorPlugin`.
+2. Construct the Dock UI using Godot Control nodes for the chat panel, history, and "Agent Plan Preview".
+3. Implement an Executor Layer that safely parses the JSON schema from the Python backend and calls native operations (`add_child`, `set_meta`, `ScriptEditor.goto_line`).
+4. Implement a Selection Context service that serializes the current tree snapshot to feed the prompt before sending to LangChain.
+
+Definition of done:
+
+1. Developer specifies "Make this top-down enemy chase the player node" while having the Enemy selected. The AI successfully builds the movement loop, adds a NavigationAgent child node, and the user can `Ctrl+Z` the whole operation if they don't like it.
+
 ---
 
 ## 3) 30-60-90 Day Build Plan

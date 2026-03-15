@@ -84,7 +84,7 @@ export default function DashboardClient() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 px-4 pb-10 text-ink">
       <div className="mx-auto max-w-6xl pt-10">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-amber-300">Vibe Engine Control Plane</p>
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-amber-300">GENESIS ENGINE Control Plane</p>
         <h1 className="mt-2 font-display text-4xl leading-tight md:text-6xl">Agentic Command Center</h1>
         <p className="mt-3 max-w-3xl text-sm text-muted md:text-base">
           Next.js + Tailwind dashboard for run telemetry, agent visibility, and command execution.

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vibe Engine OS Dashboard",
+  title: "GENESIS ENGINE OS Dashboard",
   description: "Full operating dashboard for agent orchestration, logs, jobs, engine state, and configuration.",
 };
 

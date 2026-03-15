@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Maximize2, RefreshCw, ChevronDown, Activity, AlertTriangle, PlayCircle } from "lucide-react";
+import { Maximize2, RefreshCw, ChevronDown, Activity, AlertTriangle, PlayCircle, Rocket } from "lucide-react";
 
 export function GodotPlayer({ 
   currentRunId = null, 
@@ -19,7 +19,7 @@ export function GodotPlayer({
       setStatus("building");
       // Simulate build channel event
       const timer = setTimeout(() => {
-        setIframeSrc(`/exports/${currentRunId}/index.html`);
+        // Instead of directly loading an iframe for MVP, we'll shift to native launch state
         setStatus("ready");
       }, 7000); // Updated to match WebSocket completion time (1 + 1.5 + 2 + 1.5 + 0.5) roughly
       return () => clearTimeout(timer);
@@ -42,6 +42,22 @@ export function GodotPlayer({
       } else {
         iframeRef.current.requestFullscreen();
       }
+    }
+  };
+
+  const handleLaunchNative = async () => {
+    if (!currentRunId) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/launch/${currentRunId}`, {
+        method: "POST"
+      });
+      const data = await res.json();
+      if (data.status === "error") {
+        alert("Failed to launch Godot:\n\n" + data.message);
+      }
+    } catch (e) {
+      console.error("Failed to launch Godot locally", e);
+      alert("Error contacting the API to launch Godot.");
     }
   };
 
@@ -68,14 +84,21 @@ export function GodotPlayer({
 
       {/* Main Viewport */}
       <div className="flex-1 relative top-8 h-[calc(100%-2rem)]">
-        {status === "ready" && iframeSrc ? (
-          <iframe 
-            ref={iframeRef}
-            title="Godot Web Export" 
-            src={iframeSrc} 
-            className="w-full h-full border-none"
-            allow="fullscreen"
-          />
+        {status === "ready" ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[url('https://godotengine.org/assets/home/features/2d.webp')] bg-cover bg-center before:absolute before:inset-0 before:bg-black/60">
+            <div className="z-10 flex flex-col items-center justify-center space-y-4">
+              <h2 className="text-2xl font-bold text-white tracking-wide">Build Successful</h2>
+              <p className="text-slate-300 text-sm mb-4">Your native Godot project is ready for testing.</p>
+              
+              <button 
+                onClick={handleLaunchNative}
+                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-[0_0_20px_-5px_rgba(16,185,129,0.5)] transition-all transform hover:scale-105"
+              >
+                <Rocket className="w-5 h-5" />
+                Launch Native Preview
+              </button>
+            </div>
+          </div>
         ) : status === "failed" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50">
             <AlertTriangle className="w-8 h-8 text-red-500 mb-2" />

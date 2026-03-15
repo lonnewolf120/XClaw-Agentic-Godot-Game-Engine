@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - VERTEX_STRICT=false
+      - USE_MOCK_PLANNER=true
+      - USE_MOCK_DEBUGGER=true
+    volumes:
+      - .:/app
+      - ./vibe_runs.db:/app/vibe_runs.db
+      - ./runs:/app/runs
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    environment:
+      - VERTEX_STRICT=false
+      - USE_MOCK_PLANNER=true
+      - USE_MOCK_DEBUGGER=true
+      # Requires docker.sock to mount sibling containers if headless runner uses docker locally
+    volumes:
+      - .:/app
+      - ./vibe_runs.db:/app/vibe_runs.db
+      - ./runs:/app/runs
+      - /var/run/docker.sock:/var/run/docker.sock
