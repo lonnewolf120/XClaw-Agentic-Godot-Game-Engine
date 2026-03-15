@@ -1,0 +1,16 @@
+{
+  "templates": [
+    {
+      "id": "2d-platformer-v1",
+      "name": "2D Platformer Base",
+      "tags": ["2D", "Platformer", "Starter"],
+      "safe_assets": true
+    },
+    {
+      "id": "fps-controller-v3",
+      "name": "Basic FPS Layout",
+      "tags": ["3D", "FPS"],
+      "safe_assets": true
+    }
+  ]
+}

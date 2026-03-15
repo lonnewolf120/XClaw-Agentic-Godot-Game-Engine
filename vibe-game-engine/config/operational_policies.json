@@ -29,21 +29,25 @@
       "allowed_formats": [
         "png",
         "ogg",
-        "wav"
+        "wav",
+        "glb",
+        "webm"
       ]
     }
   },
   "asset_resolution": {
-    "mode": "local_first",
-    "credit_budget_per_run": 100,
-    "max_generated_assets_per_run": 3,
+    "mode": "local_only",
+    "credit_budget_per_run": 0,
+    "generation_cost_per_asset": 0,
+    "max_generated_assets_per_run": 0,
     "allowed_online_sources": [
       "kenney.nl",
       "quaternius.com",
       "poly.pizza",
       "opengameart.org",
       "freesound.org",
-      "pixabay.com"
+      "pixabay.com",
+      "github.com"
     ]
   }
 }

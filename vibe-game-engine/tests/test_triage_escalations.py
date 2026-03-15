@@ -44,3 +44,6 @@ def test_triage_queue_writes_summary(tmp_path) -> None:
     assert len(lines) == 1
     payload = json.loads(lines[0])
     assert payload["triaged_items"] == 2
+
+    # Queue should be cleared
+    assert queue.read_text(encoding="utf-8") == ""

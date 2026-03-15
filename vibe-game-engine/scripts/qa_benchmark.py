@@ -133,6 +133,14 @@ def load_prompt_corpus(corpus_path: str | Path = DEFAULT_CORPUS_PATH) -> List[st
     return prompts
 
 
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description="Run a deterministic benchmark to verify validation.")
+    parser.add_argument("--corpus", default=str(DEFAULT_CORPUS_PATH), help="Path to prompt corpus")
+    parser.add_argument("--subset", type=int, default=None, help="Run only the first N prompts")
+    return parser.parse_args()
+
+
 def _write_benchmark_results(results: List[PromptResult]) -> None:
     BENCHMARK_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -175,7 +183,11 @@ def _write_benchmark_results(results: List[PromptResult]) -> None:
 
 
 def main() -> int:
-    prompts = load_prompt_corpus()
+    args = parse_args()
+    prompts = load_prompt_corpus(args.corpus)
+    if args.subset:
+        prompts = prompts[:args.subset]
+    
     results = run_benchmark(prompts, workspace_root=PROJECT_ROOT)
     _write_benchmark_results(results)
 

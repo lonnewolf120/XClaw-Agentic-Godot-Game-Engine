@@ -100,6 +100,8 @@ export function buildOverview() {
     },
     agents: agentStates(),
     recentRuns: recentRuns(),
+    queueItems: queueRows,
+    triageBatchesList: triageRows,
     latestBenchmark: summary,
     latestTriage: triageRows.at(-1) ?? {},
     commands: Object.entries(COMMANDS).map(([id, value]) => ({ id, label: value.label })),

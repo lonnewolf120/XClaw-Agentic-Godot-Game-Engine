@@ -1,0 +1,37 @@
+{
+  "template_id": "micro_fps_3d",
+  "folders": ["models", "textures", "sfx", "music", "cutscenes", "ui"],
+  "assets": [
+    {
+      "asset_id": "arena_model",
+      "path": "models/arena.glb",
+      "source_url": "https://quaternius.com",
+      "license": "CC0",
+      "author": "Quaternius",
+      "checksum_sha256": "91f8088393c098f13f420d898f09b89afb3f7023ec0267e5d9356f1c672b4f0c",
+      "tags": ["arena", "environment", "3d"],
+      "compatible_genres": ["fps", "arena", "3d"]
+    },
+    {
+      "asset_id": "arena_texture",
+      "path": "textures/arena_albedo.png",
+      "source_url": "https://poly.pizza",
+      "license": "CC-BY",
+      "author": "Poly Pizza",
+      "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+      "tags": ["texture", "albedo", "3d"],
+      "compatible_genres": ["fps", "arena", "3d"]
+    },
+    {
+      "asset_id": "intro_cutscene",
+      "path": "cutscenes/intro.webm",
+      "source_url": "https://pixabay.com/videos",
+      "license": "Pixabay Content License",
+      "author": "Pixabay creators",
+      "checksum_sha256": "354f693cde784a3f6afde708f4f8ac44e9f6ae34fbbe11f1494f6adcce5ec338",
+      "tags": ["intro", "story", "cinematic"],
+      "compatible_genres": ["fps", "narrative", "3d"]
+    }
+  ],
+  "notes": "3D-first fallback pack. Store local placeholders for no-credit baseline generation."
+}

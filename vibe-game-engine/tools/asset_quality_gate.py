@@ -19,17 +19,47 @@ def _load_policy(policy_path: str | Path) -> dict:
 def run_asset_quality_gate(
     assets_root: str | Path,
     policy_path: str | Path,
+    catalog_path: str | Path | None = None,
 ) -> AssetQualityResult:
     root = Path(assets_root)
     policy = _load_policy(policy_path)
     starter = policy["asset_fallback_starter_library"]
     constraints = starter["constraints"]
+    allowed_domains = policy.get("asset_resolution", {}).get("allowed_online_sources", [])
 
     max_assets = int(starter["max_total_assets"])
     max_texture_resolution = int(constraints["max_texture_resolution"])
     allowed_formats = {f".{ext}" for ext in constraints["allowed_formats"]}
 
     issues: list[str] = []
+    
+    # Check domain allowlist in catalog if provided
+    if catalog_path and Path(catalog_path).exists():
+        from tools.template_catalog import load_template_catalog
+        from urllib.parse import urlparse
+        
+        catalog = load_template_catalog(catalog_path)
+        for template in catalog.templates:
+            for asset in template.assets:
+                for url in [asset.source.source_url, asset.source.download_url]:
+                    if not url or url == "na":
+                        continue
+                    parsed_url = urlparse(url)
+                    domain = parsed_url.netloc.lower()
+                    if domain.startswith("www."):
+                        domain = domain[4:]
+                    # Check if domain matches any of the allowed online sources
+                    is_allowed = False
+                    for allowed in allowed_domains:
+                        allowed_lower = allowed.lower()
+                        if allowed_lower.startswith("www."):
+                            allowed_lower = allowed_lower[4:]
+                        if domain == allowed_lower or domain.endswith("." + allowed_lower):
+                            is_allowed = True
+                            break
+                    if not is_allowed:
+                        issues.append(f"disallowed_domain:{template.template_id}/{asset.asset_id}:{domain}")
+
     files = [p for p in root.rglob("*") if p.is_file()]
     checked_files = len(files)
 
@@ -37,12 +67,13 @@ def run_asset_quality_gate(
         issues.append(f"asset_count_exceeded: {checked_files}>{max_assets}")
 
     for file_path in files:
+        if file_path.name == "manifest.json":
+            continue
+
         suffix = file_path.suffix.lower()
         if suffix not in allowed_formats:
             issues.append(f"disallowed_format:{file_path.name}")
 
-        # Texture dimension check uses filename convention only in this deterministic gate:
-        # hero_512x512.png is accepted, hero_2048x2048.png is rejected.
         stem = file_path.stem.lower()
         if "x" in stem and suffix == ".png":
             parts = stem.split("_")[-1]

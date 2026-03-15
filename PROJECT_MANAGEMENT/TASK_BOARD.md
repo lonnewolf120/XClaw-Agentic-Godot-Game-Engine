@@ -21,10 +21,10 @@
 
 ---
 
-## Current Sprint (Active): M2/M3 Runtime Parity + Agent Runtime Integration
+## Current Sprint (Active): M2/M3 PoC Stabilization (Reality-Based)
 
 ### Sprint Goal
-Deliver runtime parity on Godot 4.6.1, integrate prompt-template agent invocation path, and stabilize export/smoke evidence.
+Close the real PoC gap by making imported templates exportable, enforcing runtime-grade validation in-pipeline, and proving repeatable strict-export success on a small benchmark slice.
 
 ### Tasks
 
@@ -83,6 +83,7 @@ Deliver runtime parity on Godot 4.6.1, integrate prompt-template agent invocatio
 | B-001 | Export templates/version parity not yet verified in environment | M1+ | Ops Agent | `open` | Validate Godot 4.6.1 templates in container before M3 |
 | B-002 | LLM routing fallback policy not implemented yet | M1+ | Coordinator Agent | `closed` | Added deterministic `needs_human` escalation policy with auto-ticket queue artifacts |
 | B-003 | Local runtime lacks pinned Godot 4.6.1 CLI/image; fallback used 4.5.1 for validation/export evidence | M2+ | Ops Agent | `closed` | Pulled `barichello/godot-ci:4.6.1` and reran validation/export parity checks |
+| B-004 | Imported Kenney templates fail strict export due missing `export_presets.cfg` in generated project root | M2/M3 | Coding Agent | `open` | Auto-bootstrap export presets pre-export and verify with strict-export matrix |
 
 ---
 
@@ -119,11 +120,52 @@ A task is `done` only if:
 
 ## Immediate Next 5 Tasks (Execution Order)
 
-1. `M4-003` – Add live log streaming panel in dashboard (`todo`)
-2. `M4-004` – Add artifact browser panel in dashboard (`todo`)
-3. `M4-005` – Add mode selector (`standalone/live_bridge/project_only`) in UI (`todo`)
-4. `M5-001` – Expand regression corpus to 50+ prompts (`todo`)
-5. `M5-002` – Add P50/P95 generation timing report (`todo`)
+1. `POC-001` – Inject/fallback `export_presets.cfg` for imported templates before export (`todo`)
+2. `POC-002` – Add pipeline Gate D runtime check node (headless import/check/smoke) and fail closed (`todo`)
+3. `POC-003` – Run strict-export matrix for 3 Kenney templates + 1 internal control and publish pass-rate (`todo`)
+4. `POC-004` – Add regression test coverage for missing-presets and runtime-gate failure paths (`todo`)
+5. `POC-005` – Update quality-gate evidence reporting to include real runtime log paths in run bundle (`todo`)
+
+---
+
+## Action Sprint (Next 5 Days)
+
+| ID | Task | Owner | Priority | Status | Acceptance Criteria |
+|---|---|---|---|---|---|
+| POC-001 | Auto-bootstrap export presets when absent in selected template copy | Coding Agent | `P0` | `todo` | Strict export no longer fails with "missing export_presets.cfg" on Racing/City/FPS templates |
+| POC-002 | Enforce real Gate D in `game_creation` via Docker Godot headless commands | Coding Agent | `P0` | `todo` | Run marked `failed` when import/check/smoke fails; run marked `completed` only when Gate D + E pass |
+| POC-003 | Execute 4-run strict-export proof set and record outcomes in `PROGRESS_LOG.md` | QA Agent | `P0` | `todo` | >=3/4 strict-export passes including at least 2 Kenney templates |
+| POC-004 | Add deterministic tests for preset bootstrap + validation gate integration | QA Agent | `P1` | `todo` | New tests pass locally and in CI with no flakiness |
+| POC-005 | Re-baseline benchmark target from "moonshot" to practical PoC threshold | PM Agent | `P1` | `todo` | Documented threshold and signed gate in quality docs with explicit pass/fail rules |
+
+---
+
+## Reference Adoption Sprint (vibesdk + bolt.diy)
+
+| ID | Milestone | Task | Owner | Priority | Status | Dependencies | Acceptance Criteria |
+|---|---|---|---|---|---|---|---|
+| REF-001 | M4 | Create reference reuse register and attribution checklist | PM Agent | P0 | `todo` | None | `REFERENCE_ADOPTION_PLAN_VIBESDK_BOLT.md` mapped to source patterns and license obligations |
+| REF-002 | M3/M4 | Add deterministic phase event contract (`phase_started/progress/completed/failed`) | Platform Agent | P0 | `todo` | REF-001 | All run phases emit structured events with `run_id`, `phase`, `timestamp`, `log_path` |
+| REF-003 | M3 | Harden Gate D/E transitions to fail closed only | Coding Agent | P0 | `todo` | POC-001, POC-002 | No run can transition to `completed` unless Gate D + Gate E pass |
+| REF-004 | M4 | Wire studio page to real run APIs, preview URL, live logs, and artifacts | Frontend Agent | P0 | `todo` | REF-002, REF-003 | Dashboard can launch, monitor, replay, and download run artifacts end-to-end |
+| REF-005 | M4 | Implement preview refresh channel (`preview_ready`, `refresh_preview`, `file_change`) | Platform Agent | P1 | `todo` | REF-004 | Preview updates without manual reload during iterative run flow |
+| REF-006 | M5 | Add quality belt jobs for dashboard (lint/type/build/a11y/perf/benchmark-subset) | Ops Agent | P1 | `todo` | REF-004 | CI publishes quality artifacts and blocks regressions on major changes |
+| REF-007 | M5 | Run CLI-dashboard parity benchmark and publish failure taxonomy report | QA Agent | P0 | `todo` | REF-004, REF-006 | Report includes pass rates, retry rates, failure classes, and owners |
+
+---
+
+## Game Dev Haven Sprint (Creator-First)
+
+| ID | Milestone | Task | Owner | Priority | Status | Dependencies | Acceptance Criteria |
+|---|---|---|---|---|---|---|---|
+| HAVEN-001 | M4 | Upgrade studio to full workbench (preview, diff, editor, inspector, logs) | Frontend Agent | P0 | `todo` | M4-006 | Studio supports complete create-inspect-iterate loop in one surface |
+| HAVEN-002 | M4 | Add prompt mode presets and starter prompt chips | Frontend Agent | P0 | `todo` | HAVEN-001 | New users can launch common game types without manual prompt engineering |
+| HAVEN-003 | M4 | Implement preview lifecycle channel and instant refresh UX | Platform Agent | P0 | `todo` | HAVEN-001 | Preview updates from run events without manual reload |
+| HAVEN-004 | M4/M5 | Add replay and share flow (share link + source/artifact download) | Platform Agent | P1 | `todo` | HAVEN-003 | Every successful run can be replayed and shared from dashboard |
+| HAVEN-005 | M5 | Add context compactifier and file-context selector for long sessions | Coding Agent | P1 | `todo` | ENG-305 | Long conversations stay stable and regenerate targeted files |
+| HAVEN-006 | M5 | Create template registry and template picker UI | Coding Agent | P1 | `todo` | HAVEN-002 | Users can pick tagged templates and launch with predictable setup |
+| HAVEN-007 | M5 | Add fallback asset pack mapping and inspector visibility | Coding Agent | P1 | `todo` | HAVEN-006 | Missing asset classes auto-fallback with clear timeline reporting |
+| HAVEN-008 | M5 | Publish creator-centric demo flow (prompt -> playtest -> share) | PM Agent | P0 | `todo` | HAVEN-001, HAVEN-004 | Demo can be executed by non-core user end-to-end |
 
 ---
 

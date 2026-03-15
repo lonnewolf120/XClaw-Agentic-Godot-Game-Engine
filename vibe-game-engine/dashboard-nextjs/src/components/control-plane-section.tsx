@@ -13,6 +13,7 @@ import GameRunSnapshotPanel from "./sections/game-run-snapshot-panel";
 import JobBoard from "./sections/job-board";
 import KpiGrid from "./sections/kpi-grid";
 import LogTailPanel from "./sections/log-tail-panel";
+import NeedsHumanPanel from "./sections/needs-human-panel";
 import RunList from "./sections/run-list";
 import ControlPlaneLayout from "./shell/control-plane-layout";
 import { useSystemSnapshot } from "./use-system-snapshot";
@@ -151,7 +152,16 @@ export default function ControlPlaneSection({ section }: { section: DashboardSec
         </>
       ) : null}
 
-      {section === "jobs" ? <JobBoard jobs={snapshot.jobs} /> : null}
+      {section === "jobs" ? (
+        <>
+          <JobBoard jobs={snapshot.jobs} />
+          <NeedsHumanPanel
+            queueItems={snapshot.overview.queueItems}
+            triageBatches={snapshot.overview.triageBatchesList}
+            onResolveAll={() => runCommand("triage_escalations")}
+          />
+        </>
+      ) : null}
 
       {section === "logs" ? <LogTailPanel logs={snapshot.logs} /> : null}
 
@@ -170,7 +180,10 @@ export default function ControlPlaneSection({ section }: { section: DashboardSec
             preferredFile={createGameLogFile}
             title="Game Creation Execution Logs"
           />
-          <GameRunSnapshotPanel gameCreation={snapshot.gameCreation} />
+          <GameRunSnapshotPanel
+            gameCreation={snapshot.gameCreation}
+            onReplay={createGame}
+          />
           <EnginePanel engine={snapshot.engine} />
           <RunList runs={snapshot.overview.recentRuns} />
         </>

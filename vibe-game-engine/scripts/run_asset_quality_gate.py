@@ -16,7 +16,12 @@ def main() -> int:
     assets_root = PROJECT_ROOT / "templates" / "base_2d_platformer" / "assets"
     assets_root.mkdir(parents=True, exist_ok=True)
     policy_path = PROJECT_ROOT / "config" / "operational_policies.json"
-    result = run_asset_quality_gate(assets_root=assets_root, policy_path=policy_path)
+    catalog_path = PROJECT_ROOT / "config" / "template_catalog.json"
+    result = run_asset_quality_gate(
+        assets_root=assets_root,
+        policy_path=policy_path,
+        catalog_path=catalog_path,
+    )
 
     payload = {
         "success": result.success,

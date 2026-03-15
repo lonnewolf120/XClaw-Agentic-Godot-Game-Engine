@@ -1,0 +1,23 @@
+# PoC benchmark corpus (20 prompts)
+# Target coverage: platformer, top-down shooter, endless runner, micro-fps-3d
+
+Create a tiny 2D platformer with jump and one enemy.
+Build a 2D side-scroller with checkpoints and one collectible objective.
+Create a short 2D platformer where the player reaches a flag to win.
+Make a fast 2D platformer with moving hazards and a basic HUD.
+Generate a topdown shooter with one weapon and a simple wave loop.
+Build a topdown arcade shooter with score and health UI.
+Create a topdown shooter where enemies spawn in timed waves.
+Generate a topdown bullet game with ammo pickup and win condition.
+Create an endless runner with lane switching and obstacle avoidance.
+Build an endless runner with distance score and game-over restart.
+Make an endless runner with speed ramp and collectible coins.
+Generate a runner with one background layer and UI progress bar.
+Create a 3D fps arena with one weapon and one enemy bot.
+Build a 3D first-person micro-fps with objective and fail state.
+Generate a 3D arena shooter with basic HUD and short intro cutscene.
+Make a 3D fps prototype with two spawn points and victory trigger.
+Create a small 2D platformer with local assets only and no generated assets.
+Build a topdown shooter using template-first assets and fallback only if needed.
+Generate an endless runner with local-first policy and minimal generation.
+Create a 3D fps demo with template assets, objective, and fail condition.

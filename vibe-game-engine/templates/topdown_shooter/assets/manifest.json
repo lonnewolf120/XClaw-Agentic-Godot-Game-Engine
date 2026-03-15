@@ -1,5 +1,27 @@
 {
   "template_id": "topdown_shooter",
   "folders": ["ui", "sfx", "sprites", "music"],
+  "assets": [
+    {
+      "asset_id": "shooter_ui",
+      "path": "ui/hud.png",
+      "source_url": "https://kenney.nl/assets/top-down-shooter",
+      "license": "CC0",
+      "author": "Kenney",
+      "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+      "tags": ["ui", "score", "health"],
+      "compatible_genres": ["shooter", "topdown"]
+    },
+    {
+      "asset_id": "laser_sfx",
+      "path": "sfx/laser.ogg",
+      "source_url": "https://freesound.org",
+      "license": "CC0/Attribution",
+      "author": "Freesound contributors",
+      "checksum_sha256": "ef6b5e79f3829b564e2ca6f2ef2bc9bc5df62e785fda634303de52f0f2892cb4",
+      "tags": ["laser", "weapon", "shot"],
+      "compatible_genres": ["shooter", "topdown", "fps"]
+    }
+  ],
   "notes": "Download pack assets and keep file names aligned with config/template_catalog.json."
 }

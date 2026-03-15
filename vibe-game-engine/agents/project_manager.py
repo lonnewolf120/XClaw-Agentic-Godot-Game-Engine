@@ -62,11 +62,14 @@ def build_project_spec(prompt: str, workspace_root: str | Path | None = None) ->
 
     selected_template = DEFAULT_TEMPLATE_PATH
     search_root = Path(workspace_root) if workspace_root is not None else WORKSPACE_ROOT
-    if TEMPLATE_CATALOG_PATH.exists():
+    catalog_path = search_root / "config" / "template_catalog.json"
+    if not catalog_path.exists():
+        catalog_path = TEMPLATE_CATALOG_PATH
+    if catalog_path.exists():
         try:
             selected_template = select_template_from_prompt(
                 prompt=normalized_prompt,
-                catalog_path=TEMPLATE_CATALOG_PATH,
+                catalog_path=catalog_path,
                 workspace_root=search_root,
             )
         except (FileNotFoundError, ValueError):

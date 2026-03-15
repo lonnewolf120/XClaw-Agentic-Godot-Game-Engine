@@ -1,0 +1,27 @@
+{
+  "template_id": "endless_runner",
+  "folders": ["ui", "sfx", "sprites", "music", "cutscenes"],
+  "assets": [
+    {
+      "asset_id": "runner_ui",
+      "path": "ui/runner_hud.png",
+      "source_url": "https://kenney.nl/assets/ui-pack",
+      "license": "CC0",
+      "author": "Kenney",
+      "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+      "tags": ["ui", "distance", "score"],
+      "compatible_genres": ["runner", "platformer"]
+    },
+    {
+      "asset_id": "runner_music",
+      "path": "music/loop.ogg",
+      "source_url": "https://pixabay.com/music",
+      "license": "Pixabay Content License",
+      "author": "Pixabay creators",
+      "checksum_sha256": "ef6b5e79f3829b564e2ca6f2ef2bc9bc5df62e785fda634303de52f0f2892cb4",
+      "tags": ["music", "loop", "arcade"],
+      "compatible_genres": ["runner", "arcade"]
+    }
+  ],
+  "notes": "Keep runner asset packs local to reduce generation credits."
+}

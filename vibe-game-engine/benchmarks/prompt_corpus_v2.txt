@@ -1,0 +1,76 @@
+# 55 Prompts for Game Engine Benchmark
+# Categories: 2D Platformer, 3D Platformer, FPS, Racing, City Builder, Shooter, Endless Runner, Puzzle, Simulation, RPG
+
+# --- 2D Platformer ---
+A tiny 2D platformer with jump and collect.
+Build a 2D side-scroller with checkpoints and one collectible objective.
+Create a short 2D platformer where the player reaches a flag to win.
+Make a fast 2D platformer with moving hazards and a basic HUD.
+Create a small 2D platformer with local assets only and no generated assets.
+A 2D platformer with wall jumping and spikes.
+A classic 2D platform run-and-jump game with coins.
+
+# --- 3D Platformer (using Kenney 3D Platformer Starter) ---
+3D platformer with double jumping and falling platforms.
+A 3D platformer where you collect coins to win.
+Build a 3D platformer with gamepad support and rotating camera.
+Generate a 3D platformer with a collectible objective and platform hazards.
+3D platformer prototype with character controller and coins.
+Create a short 3D jump-and-run game.
+
+# --- FPS (using Kenney FPS Starter) ---
+Create a 3D fps arena with one weapon and one enemy bot.
+Build a 3D first-person micro-fps with objective and fail state.
+Generate a 3D arena shooter with basic HUD and short intro cutscene.
+Make a 3D fps prototype with two spawn points and victory trigger.
+Create a 3D fps demo with template assets, objective, and fail condition.
+First person shooter with multiple weapons and enemies.
+A fast paced FPS in a simple arena.
+
+# --- Racing (using Kenney Racing Starter) ---
+Arcade-like 3D racing game with vehicle controls and track.
+Build a racing game with a gridmap track and drifting.
+Create a 3D driving simulator with arcade controls.
+A simple racing track game with lap times.
+3D racing game prototype with smoke effects and vehicle physics.
+Arcade racer with checkpoint system.
+
+# --- City Builder (using Kenney City Builder Starter) ---
+3D city builder where you can place and remove structures.
+Build a city simulation with dynamic mesh library.
+A town building game with smooth camera controls.
+3D city builder prototype with save and load feature.
+Create a simulation game for construction and building placement.
+A simple grid-based city constructor game.
+
+# --- Topdown Shooter ---
+Generate a topdown shooter with one weapon and a simple wave loop.
+Build a topdown arcade shooter with score and health UI.
+Create a topdown shooter where enemies spawn in timed waves.
+Generate a topdown bullet game with ammo pickup and win condition.
+Twin-stick survival arena with pickups.
+Arcade top-down shooter against alien swarm.
+
+# --- Endless Runner ---
+Create an endless runner with lane switching and obstacle avoidance.
+Build an endless runner with distance score and game-over restart.
+Make an endless runner with speed ramp and collectible coins.
+Generate a runner with one background layer and UI progress bar.
+Generate an endless runner with local-first policy and minimal generation.
+A simple endless runner game with jumping over hurdles.
+
+# --- Puzzle/General ---
+Puzzle game with moving blocks.
+Stealth puzzle with patrol guards.
+Grid tactics puzzle with push blocks.
+Simple point-and-click narrative.
+Visual novel with choices.
+Rhythm tap game with combo meter.
+
+# --- RPG / Simulation ---
+2D farming sim with day cycles.
+Inventory system with crafting.
+Isometric action RPG starter loop.
+Fishing mini-game with rarity tiers.
+Shop management sim with customers.
+Space mining loop with cargo management.

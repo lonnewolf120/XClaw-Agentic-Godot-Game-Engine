@@ -315,3 +315,35 @@ Operational rules:
 - Only allowlisted commands can run from dashboard API.
 - Command outputs are logged under `runs/dashboard_commands/`.
 - Dashboard polling interval is 3 seconds for overview + jobs endpoints.
+
+---
+
+## MVP Scope Freeze & Release Hardening
+
+As of the current milestone (M4 - Operational Control Plane), the MVP scope is officially frozen.
+
+### Clean Machine Verification
+To verify the engine works out-of-the-box on a fresh clone without environment-specific artifacts:
+
+1. Copy the `vibe-game-engine/` and `templates/` folders to a fresh directory.
+2. Setup the python virtual environment.
+3. Install dependencies:
+   ```bash
+   python -m pip install pytest "pydantic>=1.10,<3"
+   ```
+4. Run the core orchestration tests and validations:
+   ```bash
+   python -m pytest tests -q
+   python scripts/smoke_single_prompt.py
+   python scripts/qa_benchmark.py
+   ```
+5. Ensure 100% of the non-escalating prompts pass deterministically.
+
+### Pre-Release Checklist
+- [x] Template assets fallbacks correctly configured.
+- [x] Credit budgeting implemented for API interactions.
+- [x] Recursive permissions explicitly enforced on Windows/Linux.
+- [x] Control Plane dashboard operational (run workflows, triage).
+- [x] Local clean machine workflow verified and passing.
+
+If any major bug arises, do not expand the MVP scope. Focus exclusively on fixing regressions. All new features go into the post-MVP backlog.

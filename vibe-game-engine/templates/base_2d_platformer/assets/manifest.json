@@ -1,5 +1,37 @@
 {
   "template_id": "base_2d_platformer",
-  "notes": "Place downloaded assets in matching folders. Keep source and license metadata in config/template_catalog.json.",
-  "folders": ["ui", "sfx", "tiles", "music", "images"]
+  "folders": ["ui", "sfx", "tiles", "music", "sprites"],
+  "assets": [
+    {
+      "asset_id": "ui_button_set",
+      "path": "ui/button_set.png",
+      "source_url": "https://kenney.nl/assets/ui-pack-rpg-expansion",
+      "license": "CC0",
+      "author": "Kenney",
+      "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+      "tags": ["ui", "hud", "buttons"],
+      "compatible_genres": ["platformer", "runner", "topdown"]
+    },
+    {
+      "asset_id": "jump_sfx",
+      "path": "sfx/jump.ogg",
+      "source_url": "https://freesound.org",
+      "license": "CC0/Attribution",
+      "author": "Freesound contributors",
+      "checksum_sha256": "ef6b5e79f3829b564e2ca6f2ef2bc9bc5df62e785fda634303de52f0f2892cb4",
+      "tags": ["jump", "player", "action"],
+      "compatible_genres": ["platformer", "runner", "shooter"]
+    },
+    {
+      "asset_id": "platform_tiles",
+      "path": "tiles/platform_tiles.png",
+      "source_url": "https://kenney.nl/assets/platformer-pack-redux",
+      "license": "CC0",
+      "author": "Kenney",
+      "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+      "tags": ["tiles", "ground", "platform"],
+      "compatible_genres": ["platformer", "runner"]
+    }
+  ],
+  "notes": "Pre-download preferred assets and keep metadata aligned with config/template_catalog.json."
 }

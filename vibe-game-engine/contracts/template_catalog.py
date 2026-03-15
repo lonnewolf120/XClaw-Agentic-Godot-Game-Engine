@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pydantic import StrictInt, StrictStr, conlist
+from typing import Optional
+
+from pydantic import StrictBool, StrictInt, StrictStr, conlist
 
 from contracts.base import StrictModel
 
@@ -17,7 +19,9 @@ NonEmptyStrictStrList = _non_empty_conlist(StrictStr)
 
 class AssetSource(StrictModel):
     provider: StrictStr
+    author: StrictStr
     source_url: StrictStr
+    download_url: StrictStr
     license: StrictStr
     attribution: StrictStr
 
@@ -26,6 +30,8 @@ class TemplateAsset(StrictModel):
     asset_id: StrictStr
     category: StrictStr
     local_path: StrictStr
+    checksum_sha256: StrictStr
+    compatible_genres: NonEmptyStrictStrList
     tags: NonEmptyStrictStrList
     source: AssetSource
 
@@ -36,6 +42,8 @@ class TemplateDefinition(StrictModel):
     dimension: StrictStr
     tags: NonEmptyStrictStrList
     credit_cost_hint: StrictInt
+    description: Optional[StrictStr] = None
+    editable: Optional[StrictBool] = None
     assets: list[TemplateAsset] = []
 
 

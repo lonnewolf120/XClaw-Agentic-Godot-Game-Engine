@@ -14,6 +14,7 @@ class ResolvedAssetPlan:
     selected_local_assets: list[str]
     generated_asset_requests: list[str]
     missing_categories: list[str]
+    estimated_cost: int = 0
 
 
 def _read_policy(policy_path: str | Path) -> dict:
@@ -53,7 +54,6 @@ def resolve_assets_for_prompt(
     root = Path(workspace_root)
 
     mode = str(policy.get("asset_resolution", {}).get("mode", "local_first"))
-    max_generated_assets = int(policy.get("asset_resolution", {}).get("max_generated_assets_per_run", 3))
 
     template = None
     for item in catalog.templates:
@@ -79,11 +79,14 @@ def resolve_assets_for_prompt(
             selected_local_assets.extend(local_assets)
             continue
 
-        if mode in {"local_first", "generate_first"} and len(generated_asset_requests) < max_generated_assets:
+        if mode in {"local_first", "generate_first"}:
             generated_asset_requests.append(f"generate:{category}")
             continue
 
         missing_categories.append(category)
+
+    gen_cost = int(policy.get("asset_resolution", {}).get("generation_cost_per_asset", 40))
+    estimated_cost = len(generated_asset_requests) * gen_cost
 
     return ResolvedAssetPlan(
         template_path=template_path,
@@ -91,4 +94,5 @@ def resolve_assets_for_prompt(
         selected_local_assets=selected_local_assets,
         generated_asset_requests=generated_asset_requests,
         missing_categories=missing_categories,
+        estimated_cost=estimated_cost,
     )

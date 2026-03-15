@@ -1,0 +1,7 @@
+[application]
+config/name="VibeEndlessRunner"
+config/description="Starter endless runner template"
+run/main_scene="res://scenes/Main.tscn"
+
+[rendering]
+quality/driver_name="GLES3"

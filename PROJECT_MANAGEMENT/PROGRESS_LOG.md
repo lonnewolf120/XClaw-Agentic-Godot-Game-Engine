@@ -1,5 +1,57 @@
 # Vibe Game Engine — Progress Log
 
+## 2026-03-16 (Reference-Informed Planning: vibesdk + bolt.diy)
+
+### Scope Executed
+- Produced comprehensive adoption plan to leverage `vibesdk` and `bolt.diy` workflow patterns for XClaw dashboard and pipeline execution hardening.
+- Kept plan aligned to existing MVP non-negotiables (Gate D/Gate E, fail-closed states, deterministic artifacts).
+
+### Artifacts Added/Updated
+- Added: `PROJECT_MANAGEMENT/REFERENCE_ADOPTION_PLAN_VIBESDK_BOLT.md`
+- Updated: `PROJECT_MANAGEMENT/TASK_BOARD.md` (new `REF-001` to `REF-007` Reference Adoption Sprint)
+
+### Planning Outcomes
+- Defined architecture target: deterministic phase lifecycle + normalized event fabric + three-level preview strategy.
+- Defined 7 execution workstreams covering governance, orchestration, runtime hardening, studio wiring, quality belt, and release gate.
+- Defined 4-week critical-path schedule from reliability to release sign-off.
+
+### Open Blockers
+- None introduced by planning session.
+- Existing runtime/export blockers remain governed by `POC-001` to `POC-005`.
+
+### Next Actions
+1. Execute `REF-001` and finalize source-pattern attribution register.
+2. Implement phase event contract (`REF-002`) and fail-closed transition safeguards (`REF-003`).
+3. Wire studio UX to live run APIs, logs, preview, and artifacts (`REF-004`).
+
+## 2026-03-16 (Creator-First Replan: Game Dev Haven)
+
+### Scope Executed
+- Replaced previous planning emphasis with a creator-first MVP plan focused on making XClaw a full game creation platform.
+- Produced explicit feature-level reuse and implementation instructions using `vibesdk` and `bolt.diy` references.
+
+### Artifacts Added/Updated
+- Added: `PROJECT_MANAGEMENT/GAME_DEV_HAVEN_MVP_PLAN.md`
+- Updated: `PROJECT_MANAGEMENT/TASK_BOARD.md` with `HAVEN-001` to `HAVEN-008`
+
+### Planning Outcomes
+- Defined 6 core creator-facing MVP feature packs:
+  1. Creator Studio
+  2. Smart Prompt Engine
+  3. Template and Asset Universe
+  4. Instant Playtest Loop
+  5. Collaboration and Share
+  6. Creator Onboarding UX
+- Defined 30-60-90 day delivery sequencing and concrete execution command checklist.
+
+### Open Blockers
+- No new blockers introduced in planning.
+
+### Next Actions
+1. Execute `HAVEN-001` studio workbench implementation.
+2. Execute `HAVEN-002` prompt presets and starter chips.
+3. Execute `HAVEN-003` preview lifecycle refresh channel.
+
 ## 2026-03-14
 
 ### Session Start
@@ -462,4 +514,134 @@
 - `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" scripts/create_game_from_prompt.py --prompt "Create a tiny 2D platformer with jump and one enemy"` produced stage-stream output (`RUN_INIT`, `PM_AGENT`, `COORDINATOR`, `VALIDATION`, `RUN_DONE`).
 - `npx tsc --noEmit` (in `vibe-game-engine/dashboard-nextjs`) -> pass
 - `npm run build` (in `vibe-game-engine/dashboard-nextjs`) -> pass; includes route `api/jobs/[jobId]/cancel`
+
+---
+
+## 2026-03-15 (Template Catalog + Local-First Asset Resolution)
+
+### Scope Executed
+- Added template catalog schema and tooling for deterministic template selection.
+- Added local-first asset resolver with generation budget caps from operational policy.
+- Extended template inventory to include `topdown_shooter`, `endless_runner`, and `micro_fps_3d` scaffolds.
+- Added template asset manifests and placeholder local assets for zero-credit baseline runs.
+- Updated Project Manager to choose template by prompt intent instead of fixed hardcoded path.
+
+### Implemented/Updated Files
+- `vibe-game-engine/contracts/template_catalog.py`
+- `vibe-game-engine/contracts/__init__.py`
+- `vibe-game-engine/tools/template_catalog.py`
+- `vibe-game-engine/tools/asset_resolver.py`
+- `vibe-game-engine/tools/__init__.py`
+- `vibe-game-engine/agents/project_manager.py`
+- `vibe-game-engine/agents/runtime.py`
+- `vibe-game-engine/orchestration/game_creation.py`
+- `vibe-game-engine/config/template_catalog.json`
+- `vibe-game-engine/config/operational_policies.json`
+- `vibe-game-engine/scripts/sync_template_assets.py`
+- `vibe-game-engine/templates/base_2d_platformer/assets/manifest.json`
+- `vibe-game-engine/templates/topdown_shooter/` (project scaffold + assets manifest)
+- `vibe-game-engine/templates/endless_runner/` (project scaffold + assets manifest)
+- `vibe-game-engine/templates/micro_fps_3d/` (project scaffold + assets manifest)
+- `vibe-game-engine/tests/test_template_catalog_and_asset_resolver.py`
+
+### Validation Evidence
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" -m pytest tests/test_template_catalog_and_asset_resolver.py tests/test_agents_flow.py tests/test_runtime_invocation.py tests/test_game_creation_engine.py -q` -> `16 passed in 0.40s`
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" -m pytest tests -q` -> `35 passed in 4.12s`
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" scripts/sync_template_assets.py --dry-run` -> script executed and reported `downloaded=0`, `skipped=9` (non-direct source URLs)
+
+---
+
+## 2026-03-15 (Steps 1-3 Completion: Direct URLs + PoC Gate + Budget Hard Fail)
+
+### Scope Executed
+- Completed step 1 by converting catalog metadata to direct-download URL format and validating legal source domains.
+- Completed step 2 by adding and executing a 20-prompt PoC benchmark gate with pass-rate and template-coverage checks.
+- Completed step 3 by enforcing runtime hard-fail when generated-asset requests exceed configured per-run budget.
+
+### Implemented/Updated Files
+- `vibe-game-engine/contracts/template_catalog.py`
+- `vibe-game-engine/config/template_catalog.json`
+- `vibe-game-engine/scripts/sync_template_assets.py`
+- `vibe-game-engine/orchestration/game_creation.py`
+- `vibe-game-engine/scripts/poc_benchmark.py`
+- `vibe-game-engine/benchmarks/prompt_corpus_poc_v1.txt`
+- `vibe-game-engine/tests/test_game_creation_engine.py`
+- `vibe-game-engine/tests/test_template_catalog_and_asset_resolver.py`
+- `vibe-game-engine/tests/test_sync_template_assets.py`
+- `vibe-game-engine/tests/test_poc_benchmark.py`
+- `vibe-game-engine/templates/*/assets/manifest.json` (metadata expansion)
+
+### Validation Evidence
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" scripts/sync_template_assets.py --validate-only` -> `validated=10`, `invalid=0`
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" scripts/poc_benchmark.py` -> `poc_completed=20/20`, `poc_gate_pass=True`
+- `& "e:/Projects/GAMEDEV/XClaw Agentic Godot Game Engine/.venv/Scripts/python.exe" -m pytest tests -q` -> `39 passed in 0.65s`
+
+---
+
+## 2026-03-15 (Kenney Starter Kits Integrated as Direct Templates)
+
+### Scope Executed
+- Integrated 5 imported Kenney starter kits into engine template catalog for direct selection/copy on generation runs.
+- Added prompt-intent mapping tags for racing, city-builder, FPS, 3D platformer, and basic scene use cases.
+- Updated project structure validator to be template-agnostic (derive `run/main_scene` from `project.godot`) so non-`scripts/main.gd` kits validate cleanly.
+- Added per-kit `vibe_template_manifest.json` files inside imported template folders to document provenance/features and indicate editability.
+
+### Implemented/Updated Files
+- `vibe-game-engine/config/template_catalog.json`
+- `vibe-game-engine/orchestration/game_creation.py`
+- `vibe-game-engine/tests/test_template_catalog_and_asset_resolver.py`
+- `templates/Starter-Kit-Racing/vibe_template_manifest.json`
+- `templates/Starter-Kit-City-Builder/vibe_template_manifest.json`
+- `templates/Starter-Kit-FPS/vibe_template_manifest.json`
+- `templates/Starter-Kit-3D-Platformer/vibe_template_manifest.json`
+- `templates/Starter-Kit-Basic-Scene/vibe_template_manifest.json`
+
+### Validation Evidence
+- `scripts/create_game_from_prompt.py --prompt "Create an arcade racing game with vehicle controls and smoke"` -> selected `../templates/Starter-Kit-Racing`, `final_status=RunStatus.COMPLETED`.
+- `scripts/create_game_from_prompt.py --prompt "Build a 3d city builder with placement and removal of structures"` -> selected `../templates/Starter-Kit-City-Builder`, `final_status=RunStatus.COMPLETED`.
+- `python -m pytest tests/test_template_catalog_and_asset_resolver.py tests/test_game_creation_engine.py -q` -> `11 passed in 0.59s`.
+- `python -m pytest tests -q` -> `41 passed in 0.76s`.
+- `scripts/poc_benchmark.py` -> `poc_completed=20/20`, `poc_gate_pass=True`.
+
+---
+
+## 2026-03-15 (Reality Check: Real Runtime Validation vs PoC Claim)
+
+### What Was Validated (Real, Not Synthetic)
+- Ran strict-export creation flow using Docker Godot `4.6.1` on three Kenney-based prompts:
+  - Racing (`../templates/Starter-Kit-Racing`)
+  - City Builder (`../templates/Starter-Kit-City-Builder`)
+  - FPS (`../templates/Starter-Kit-FPS`)
+- Ran one strict-export control with internal base template:
+  - `templates/base_2d_platformer`
+
+### Findings
+- Kenney strict-export runs failed at export stage with the same root cause:
+  - `ERROR: This project doesn't have an export_presets.cfg file at its root.`
+- Manual headless import/check/smoke commands on generated Kenney projects returned exit code `0`.
+- Internal base-template strict-export control passed and produced artifact.
+
+### Evidence
+- Failed run bundles:
+  - `vibe-game-engine/runs/run-20260315091354603683/run_bundle.json`
+  - `vibe-game-engine/runs/run-20260315091407244244/run_bundle.json`
+  - `vibe-game-engine/runs/run-20260315091423032052/run_bundle.json`
+- Failed export logs:
+  - `vibe-game-engine/runs/run-20260315091354603683/project/.vibe/export/export.log`
+  - `vibe-game-engine/runs/run-20260315091407244244/project/.vibe/export/export.log`
+  - `vibe-game-engine/runs/run-20260315091423032052/project/.vibe/export/export.log`
+- Passed control run bundle:
+  - `vibe-game-engine/runs/run-20260315091543576705/run_bundle.json`
+
+### Practical Next Steps (Actionable)
+1. Implement export preset bootstrap/fallback for imported templates before Gate E.
+2. Enforce real headless Gate D in `game_creation` path (import/check/smoke) before completion status.
+3. Re-run strict-export matrix (Racing, City Builder, FPS, Base Control) and publish pass-rate.
+4. Add tests that fail when presets are missing and pass when bootstrap is applied.
+5. Re-baseline PoC claim only after real matrix passes defined threshold.
+
+### Current PoC Readiness Statement
+- Architecture and template routing are in place.
+- Export reliability across integrated templates is not yet at PoC quality-gate level.
+- Immediate focus switched from feature expansion to stabilization and proof.
 

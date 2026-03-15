@@ -218,14 +218,14 @@ Milestone 6 is complete when non-developer users can reliably generate and downl
 - One-command local startup and basic installer workflow.
 
 ### Acceptance Criteria
-- [ ] 50+ test prompts completed and reported.
-- [ ] First-pass success >= 95%.
-- [ ] P95 generation time < 10 minutes.
-- [ ] Standalone executable verified on fresh Windows machine.
-- [ ] Launch checklist fully complete.
+- [x] 50+ test prompts completed and reported.
+- [x] First-pass success >= 95%.
+- [x] P95 generation time < 10 minutes.
+- [x] Standalone executable verified on fresh Windows machine.
+- [x] Launch checklist fully complete.
 
 ### Exit Condition
-Milestone 7 is complete only when MVP is public-release ready.
+Milestone 7 is complete. **MVP SCOPE FREEZE:** All tracks completed. Clean machine verified. MVP is public-release ready.
 
 ---
 

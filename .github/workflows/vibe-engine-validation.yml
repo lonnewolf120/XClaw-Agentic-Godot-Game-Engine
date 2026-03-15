@@ -46,3 +46,6 @@ jobs:
 
       - name: Run benchmark validation
         run: python scripts/qa_benchmark.py
+
+      - name: Run full orchestration benchmark (subset)
+        run: python scripts/full_benchmark.py --subset 3

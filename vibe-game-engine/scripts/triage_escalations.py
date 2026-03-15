@@ -59,6 +59,9 @@ def triage_queue(
     with triage_log_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(summary) + "\n")
 
+    # Clear the queue since the tickets have been triaged
+    queue_path.write_text("", encoding="utf-8")
+
     return summary
 
 

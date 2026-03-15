@@ -11,6 +11,8 @@ export interface OverviewPayload {
   };
   agents: Array<{ name: string; state: AgentState }>;
   recentRuns: Array<{ runId: string; state: string; path: string }>;
+  queueItems: Array<{ run_id?: string; timestamp_utc?: string; failure_reason?: string; [key: string]: unknown }>;
+  triageBatchesList: Array<{ timestamp_utc?: string; batch_size?: number; resolved?: number; open_tickets?: number; [key: string]: unknown }>;
   commands: Array<{ id: string; label: string }>;
 }
 

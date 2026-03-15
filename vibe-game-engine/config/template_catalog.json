@@ -13,10 +13,14 @@
           "asset_id": "ui_button_set",
           "category": "ui",
           "local_path": "templates/base_2d_platformer/assets/ui/button_set.png",
+          "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+          "compatible_genres": ["platformer", "runner", "topdown"],
           "tags": ["ui", "hud", "buttons"],
           "source": {
             "provider": "Kenney",
+            "author": "Kenney",
             "source_url": "https://kenney.nl/assets/ui-pack-rpg-expansion",
+            "download_url": "https://kenney.nl/assets/ui-pack-rpg-expansion.zip",
             "license": "CC0",
             "attribution": "Kenney"
           }
@@ -25,10 +29,14 @@
           "asset_id": "jump_sfx",
           "category": "sfx",
           "local_path": "templates/base_2d_platformer/assets/sfx/jump.ogg",
+          "checksum_sha256": "ef6b5e79f3829b564e2ca6f2ef2bc9bc5df62e785fda634303de52f0f2892cb4",
+          "compatible_genres": ["platformer", "runner", "shooter"],
           "tags": ["jump", "player", "action"],
           "source": {
             "provider": "Freesound",
+            "author": "Freesound contributors",
             "source_url": "https://freesound.org",
+            "download_url": "https://freesound.org/data/previews/270/270404_5123851-lq.ogg",
             "license": "CC0/Attribution",
             "attribution": "Freesound contributors"
           }
@@ -37,10 +45,14 @@
           "asset_id": "platform_tiles",
           "category": "tiles",
           "local_path": "templates/base_2d_platformer/assets/tiles/platform_tiles.png",
+          "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+          "compatible_genres": ["platformer", "runner"],
           "tags": ["tiles", "ground", "platform"],
           "source": {
             "provider": "Kenney",
+            "author": "Kenney",
             "source_url": "https://kenney.nl/assets/platformer-pack-redux",
+            "download_url": "https://kenney.nl/assets/platformer-pack-redux.zip",
             "license": "CC0",
             "attribution": "Kenney"
           }
@@ -58,10 +70,14 @@
           "asset_id": "shooter_ui",
           "category": "ui",
           "local_path": "templates/topdown_shooter/assets/ui/hud.png",
+          "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+          "compatible_genres": ["shooter", "topdown"],
           "tags": ["ui", "score", "health"],
           "source": {
             "provider": "Kenney",
+            "author": "Kenney",
             "source_url": "https://kenney.nl/assets/top-down-shooter",
+            "download_url": "https://kenney.nl/assets/top-down-shooter.zip",
             "license": "CC0",
             "attribution": "Kenney"
           }
@@ -70,10 +86,14 @@
           "asset_id": "laser_sfx",
           "category": "sfx",
           "local_path": "templates/topdown_shooter/assets/sfx/laser.ogg",
+          "checksum_sha256": "ef6b5e79f3829b564e2ca6f2ef2bc9bc5df62e785fda634303de52f0f2892cb4",
+          "compatible_genres": ["shooter", "topdown", "fps"],
           "tags": ["laser", "weapon", "shot"],
           "source": {
             "provider": "Freesound",
+            "author": "Freesound contributors",
             "source_url": "https://freesound.org",
+            "download_url": "https://freesound.org/data/previews/171/171104_2398403-lq.ogg",
             "license": "CC0/Attribution",
             "attribution": "Freesound contributors"
           }
@@ -91,10 +111,14 @@
           "asset_id": "runner_ui",
           "category": "ui",
           "local_path": "templates/endless_runner/assets/ui/runner_hud.png",
+          "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+          "compatible_genres": ["runner", "platformer"],
           "tags": ["ui", "distance", "score"],
           "source": {
             "provider": "Kenney",
+            "author": "Kenney",
             "source_url": "https://kenney.nl/assets/ui-pack",
+            "download_url": "https://kenney.nl/assets/ui-pack.zip",
             "license": "CC0",
             "attribution": "Kenney"
           }
@@ -103,10 +127,14 @@
           "asset_id": "runner_music",
           "category": "music",
           "local_path": "templates/endless_runner/assets/music/loop.ogg",
+          "checksum_sha256": "ef6b5e79f3829b564e2ca6f2ef2bc9bc5df62e785fda634303de52f0f2892cb4",
+          "compatible_genres": ["runner", "arcade"],
           "tags": ["music", "loop", "arcade"],
           "source": {
             "provider": "Pixabay",
+            "author": "Pixabay creators",
             "source_url": "https://pixabay.com/music",
+            "download_url": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8e8d5f80f.mp3?filename=upbeat-funk-10902.mp3",
             "license": "Pixabay Content License",
             "attribution": "Pixabay creators"
           }
@@ -124,24 +152,455 @@
           "asset_id": "arena_model",
           "category": "models",
           "local_path": "templates/micro_fps_3d/assets/models/arena.glb",
+          "checksum_sha256": "91f8088393c098f13f420d898f09b89afb3f7023ec0267e5d9356f1c672b4f0c",
+          "compatible_genres": ["fps", "arena", "3d"],
           "tags": ["arena", "environment", "3d"],
           "source": {
             "provider": "Quaternius",
+            "author": "Quaternius",
             "source_url": "https://quaternius.com",
+            "download_url": "https://quaternius.com/assets/prototype-kit.zip",
             "license": "CC0",
             "attribution": "Quaternius"
+          }
+        },
+        {
+          "asset_id": "arena_texture",
+          "category": "textures",
+          "local_path": "templates/micro_fps_3d/assets/textures/arena_albedo.png",
+          "checksum_sha256": "0f4af0f2aca7614d607bf84f0f5fd77f7b40d113343b797f11b7f08640f6df30",
+          "compatible_genres": ["fps", "arena", "3d"],
+          "tags": ["texture", "albedo", "3d"],
+          "source": {
+            "provider": "Poly Pizza",
+            "author": "Poly Pizza",
+            "source_url": "https://poly.pizza",
+            "download_url": "https://poly.pizza/m/8f9d0f13-3b91-4f33-8bb1-bce6f8514d57.glb",
+            "license": "CC-BY",
+            "attribution": "Poly Pizza"
           }
         },
         {
           "asset_id": "intro_cutscene",
           "category": "cutscenes",
           "local_path": "templates/micro_fps_3d/assets/cutscenes/intro.webm",
+          "checksum_sha256": "354f693cde784a3f6afde708f4f8ac44e9f6ae34fbbe11f1494f6adcce5ec338",
+          "compatible_genres": ["fps", "narrative", "3d"],
           "tags": ["intro", "story", "cinematic"],
           "source": {
             "provider": "Pixabay",
+            "author": "Pixabay creators",
             "source_url": "https://pixabay.com/videos",
+            "download_url": "https://cdn.pixabay.com/video/2023/05/02/161284-823977680_large.mp4",
             "license": "Pixabay Content License",
             "attribution": "Pixabay creators"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "kenney_starter_kit_racing",
+      "path": "../templates/Starter-Kit-Racing",
+      "dimension": "3d",
+      "tags": ["racing", "car", "vehicle", "track", "arcade racing", "gridmap", "smoke effect"],
+      "credit_cost_hint": 0,
+      "description": "Arcade-like racing game with vehicle controls, smoke effects, GridMap track creation, 3D models and sounds.",
+      "editable": true,
+      "assets": [
+        {
+          "asset_id": "racing_ui_icon",
+          "category": "ui",
+          "local_path": "../templates/Starter-Kit-Racing/icon.png",
+          "checksum_sha256": "kenney-racing-icon",
+          "compatible_genres": ["racing", "arcade", "driving"],
+          "tags": ["ui", "icon", "hud"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-Racing",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-Racing/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "racing_engine_sfx",
+          "category": "sfx",
+          "local_path": "../templates/Starter-Kit-Racing/audio/engine.ogg",
+          "checksum_sha256": "kenney-racing-engine",
+          "compatible_genres": ["racing", "arcade", "driving"],
+          "tags": ["sfx", "engine", "vehicle"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-Racing",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-Racing/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "racing_track_model",
+          "category": "models",
+          "local_path": "../templates/Starter-Kit-Racing/models/track-straight.glb",
+          "checksum_sha256": "kenney-racing-track-straight",
+          "compatible_genres": ["racing", "arcade", "driving"],
+          "tags": ["model", "track", "gridmap"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-Racing",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-Racing/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "racing_colormap",
+          "category": "textures",
+          "local_path": "../templates/Starter-Kit-Racing/models/Textures/colormap.png",
+          "checksum_sha256": "kenney-racing-colormap",
+          "compatible_genres": ["racing", "arcade", "driving"],
+          "tags": ["texture", "colormap", "environment"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-Racing",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-Racing/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "kenney_starter_kit_city_builder",
+      "path": "../templates/Starter-Kit-City-Builder",
+      "dimension": "3d",
+      "tags": ["city builder", "city", "building", "construction", "simulation", "save load", "mesh library"],
+      "credit_cost_hint": 0,
+      "description": "3D city builder with building/removing structures, smooth camera controls, dynamic MeshLibrary, saving/loading, sprites and 3D models.",
+      "editable": true,
+      "assets": [
+        {
+          "asset_id": "city_ui_selector",
+          "category": "ui",
+          "local_path": "../templates/Starter-Kit-City-Builder/sprites/selector.png",
+          "checksum_sha256": "kenney-city-selector",
+          "compatible_genres": ["city builder", "simulation"],
+          "tags": ["ui", "selector", "placement"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "city_ambience",
+          "category": "music",
+          "local_path": "../templates/Starter-Kit-City-Builder/sounds/ambience.ogg",
+          "checksum_sha256": "kenney-city-ambience",
+          "compatible_genres": ["city builder", "simulation"],
+          "tags": ["music", "ambience", "loop"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "city_place_sfx",
+          "category": "sfx",
+          "local_path": "../templates/Starter-Kit-City-Builder/sounds/placement-a.ogg",
+          "checksum_sha256": "kenney-city-placement",
+          "compatible_genres": ["city builder", "simulation"],
+          "tags": ["sfx", "placement", "building"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "city_structure_model",
+          "category": "models",
+          "local_path": "../templates/Starter-Kit-City-Builder/models/building-small-a.glb",
+          "checksum_sha256": "kenney-city-building-small-a",
+          "compatible_genres": ["city builder", "simulation"],
+          "tags": ["model", "building", "city"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "city_colormap",
+          "category": "textures",
+          "local_path": "../templates/Starter-Kit-City-Builder/models/Textures/colormap.png",
+          "checksum_sha256": "kenney-city-colormap",
+          "compatible_genres": ["city builder", "simulation"],
+          "tags": ["texture", "colormap", "city"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-City-Builder/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "kenney_starter_kit_fps",
+      "path": "../templates/Starter-Kit-FPS",
+      "dimension": "3d",
+      "tags": ["fps", "first person shooter", "shooter", "weapon", "enemy", "gun", "first person"],
+      "credit_cost_hint": 0,
+      "description": "First person shooter with character controller, weapons/switching, enemies, CC0 sprites and 3D models.",
+      "editable": true,
+      "assets": [
+        {
+          "asset_id": "fps_crosshair",
+          "category": "ui",
+          "local_path": "../templates/Starter-Kit-FPS/sprites/crosshair.png",
+          "checksum_sha256": "kenney-fps-crosshair",
+          "compatible_genres": ["fps", "shooter"],
+          "tags": ["ui", "crosshair", "hud"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-FPS",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-FPS/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "fps_blaster_sfx",
+          "category": "sfx",
+          "local_path": "../templates/Starter-Kit-FPS/sounds/blaster.ogg",
+          "checksum_sha256": "kenney-fps-blaster",
+          "compatible_genres": ["fps", "shooter"],
+          "tags": ["sfx", "blaster", "weapon"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-FPS",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-FPS/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "fps_footsteps_loop",
+          "category": "music",
+          "local_path": "../templates/Starter-Kit-FPS/sounds/walking.ogg",
+          "checksum_sha256": "kenney-fps-walking",
+          "compatible_genres": ["fps", "shooter"],
+          "tags": ["music", "loop", "walking"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-FPS",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-FPS/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "fps_enemy_model",
+          "category": "models",
+          "local_path": "../templates/Starter-Kit-FPS/models/enemy-flying.glb",
+          "checksum_sha256": "kenney-fps-enemy-flying",
+          "compatible_genres": ["fps", "shooter"],
+          "tags": ["model", "enemy", "flying"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-FPS",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-FPS/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "fps_colormap",
+          "category": "textures",
+          "local_path": "../templates/Starter-Kit-FPS/models/Textures/colormap.png",
+          "checksum_sha256": "kenney-fps-colormap",
+          "compatible_genres": ["fps", "shooter"],
+          "tags": ["texture", "colormap", "fps"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-FPS",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-FPS/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "kenney_starter_kit_3d_platformer",
+      "path": "../templates/Starter-Kit-3D-Platformer",
+      "dimension": "3d",
+      "tags": ["3d platformer", "platformer", "double jump", "collectibles", "coins", "gamepad"],
+      "credit_cost_hint": 0,
+      "description": "3D platformer with character controller (double jump), collectable coins, falling platforms, camera controls, gamepad support.",
+      "editable": true,
+      "assets": [
+        {
+          "asset_id": "platformer_coin_ui",
+          "category": "ui",
+          "local_path": "../templates/Starter-Kit-3D-Platformer/sprites/coin.png",
+          "checksum_sha256": "kenney-3dplatformer-coin",
+          "compatible_genres": ["platformer", "3d platformer"],
+          "tags": ["ui", "coin", "collectible"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "platformer_jump_sfx",
+          "category": "sfx",
+          "local_path": "../templates/Starter-Kit-3D-Platformer/sounds/jump.ogg",
+          "checksum_sha256": "kenney-3dplatformer-jump",
+          "compatible_genres": ["platformer", "3d platformer"],
+          "tags": ["sfx", "jump", "character"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "platformer_walk_loop",
+          "category": "music",
+          "local_path": "../templates/Starter-Kit-3D-Platformer/sounds/walking.ogg",
+          "checksum_sha256": "kenney-3dplatformer-walking",
+          "compatible_genres": ["platformer", "3d platformer"],
+          "tags": ["music", "loop", "walking"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "platformer_character_model",
+          "category": "models",
+          "local_path": "../templates/Starter-Kit-3D-Platformer/models/character.glb",
+          "checksum_sha256": "kenney-3dplatformer-character",
+          "compatible_genres": ["platformer", "3d platformer"],
+          "tags": ["model", "character", "player"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "platformer_colormap",
+          "category": "textures",
+          "local_path": "../templates/Starter-Kit-3D-Platformer/models/Textures/colormap.png",
+          "checksum_sha256": "kenney-3dplatformer-colormap",
+          "compatible_genres": ["platformer", "3d platformer"],
+          "tags": ["texture", "colormap", "platformer"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "kenney_starter_kit_basic_scene",
+      "path": "../templates/Starter-Kit-Basic-Scene",
+      "dimension": "3d",
+      "tags": ["basic scene", "environment", "arena", "lighting", "prototype", "starter"],
+      "credit_cost_hint": 0,
+      "description": "Basic scene with environment setup for pleasing bright results, includes the CC0 Mini Arena pack.",
+      "editable": true,
+      "assets": [
+        {
+          "asset_id": "basic_scene_ui_icon",
+          "category": "ui",
+          "local_path": "../templates/Starter-Kit-Basic-Scene/icon.png",
+          "checksum_sha256": "kenney-basicscene-icon",
+          "compatible_genres": ["environment", "arena", "prototype"],
+          "tags": ["ui", "icon", "project"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-Basic-Scene",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-Basic-Scene/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "basic_scene_arena_model",
+          "category": "models",
+          "local_path": "../templates/Starter-Kit-Basic-Scene/sample/Mini Arena/Models/GLB format/floor.glb",
+          "checksum_sha256": "kenney-basicscene-floor",
+          "compatible_genres": ["environment", "arena", "prototype"],
+          "tags": ["model", "arena", "floor"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-Basic-Scene",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-Basic-Scene/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
+          }
+        },
+        {
+          "asset_id": "basic_scene_colormap",
+          "category": "textures",
+          "local_path": "../templates/Starter-Kit-Basic-Scene/sample/Mini Arena/Models/GLB format/Textures/colormap.png",
+          "checksum_sha256": "kenney-basicscene-colormap",
+          "compatible_genres": ["environment", "arena", "prototype"],
+          "tags": ["texture", "colormap", "arena"],
+          "source": {
+            "provider": "Kenney",
+            "author": "Kenney",
+            "source_url": "https://github.com/KenneyNL/Starter-Kit-Basic-Scene",
+            "download_url": "https://github.com/KenneyNL/Starter-Kit-Basic-Scene/archive/refs/heads/master.zip",
+            "license": "CC0",
+            "attribution": "Kenney"
           }
         }
       ]
