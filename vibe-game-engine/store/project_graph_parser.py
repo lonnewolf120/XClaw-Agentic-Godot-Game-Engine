@@ -17,10 +17,15 @@ class ProjectGraphParser:
         # Simple regex for GDScript chunks
         self.func_regex = re.compile(r"^func\s+([a-zA-Z0-9_]+)\s*\(")
         self.class_regex = re.compile(r"^class\s+([a-zA-Z0-9_]+)\s*:")
+        self.signal_gd_regex = re.compile(r"^signal\s+([a-zA-Z0-9_]+)")
+        self.property_gd_regex = re.compile(r"^var\s+([a-zA-Z0-9_]+)")
+        self.func_call_regex = re.compile(r"([a-zA-Z0-9_]+)\s*\(")
         
         # Simple regex for TSCN nodes
-        self.node_regex = re.compile(r"^\[node\s+name=\"([^\"]+)\"\s+type=\"([^\"]+)\"")
+        self.node_regex = re.compile(r"^\[node\s+name=\"([^\"]+)\"\s+(?:type=\"([^\"]+)\")?")
         self.ext_resource_regex = re.compile(r"^\[ext_resource\s+type=\"([^\"]+)\"\s+path=\"([^\"]+)\"\s+id=\"([^\"]+)\"")
+        self.sub_resource_regex = re.compile(r"^\[sub_resource\s+type=\"([^\"]+)\"\s+id=\"([^\"]+)\"")
+        self.connection_regex = re.compile(r"^\[connection\s+signal=\"([^\"]+)\"\s+from=\"([^\"]+)\"\s+to=\"([^\"]+)\"\s+method=\"([^\"]+)\"")
 
     def _get_file_hash(self, file_path: str) -> str:
         with open(file_path, 'rb') as f:
@@ -53,8 +58,18 @@ class ProjectGraphParser:
         start_line = 0
         
         for i, line in enumerate(lines):
+            # Parse semantic script dependencies (calls to other scripts or properties)
+            # This is a light heuristic; true AST parsing is better but this works for Phase 2
+            # It looks for `Script.call()` patterns to create `SCRIPT_CALLS_SCRIPT` edges
+            # But simpler: just index signals for now.
+            
             func_match = self.func_regex.match(line)
             class_match = self.class_regex.match(line)
+            sig_match = self.signal_gd_regex.match(line)
+            
+            if sig_match:
+                sig_name = sig_match.group(1)
+                self.store.add_edge(self.project_id, rel_path, f"{rel_path}::{sig_name}", "SCRIPT_DEFINES_SIGNAL")
             
             if func_match or class_match:
                 # Save previous chunk if exists
@@ -94,6 +109,7 @@ class ProjectGraphParser:
         # 2. Extract Node definitions for lexical search
         for match in self.node_regex.finditer(content):
             node_name, node_type = match.groups()
+            if not node_type: node_type = "PackedScene" # If type is missing, it's usually an instanced scene
             node_id = f"{rel_path}::{node_name}"
             
             # Simple indexing of node presence
@@ -109,6 +125,29 @@ class ProjectGraphParser:
                 file_hash=file_hash
             )
             self.store.add_edge(self.project_id, rel_path, node_id, 'SCENE_CONTAINS_NODE')
+
+        # 3. Extract Gameplay Semantic Signals (Connections)
+        for match in self.connection_regex.finditer(content):
+            sig_name, from_node, to_node, method = match.groups()
+            # Normalize node paths (from root vs relative)
+            from_id = f"{rel_path}::{from_node}"
+            to_id = f"{rel_path}::{to_node}"
+            
+            # Record the signal trigger behavior edge
+            self.store.add_edge(self.project_id, from_id, to_id, f"SIGNAL_TRIGGERS_{sig_name}")
+            
+            # Record an additional semantic chunk for FTS searching like "damage signal HUD"
+            self.store.upsert_chunk(
+                project_id=self.project_id,
+                index_type="project",
+                file_path=rel_path,
+                symbol_kind="tscn_signal",
+                symbol_name=sig_name,
+                text_excerpt=f"{from_node} emits {sig_name} to {to_node}.{method}",
+                start_line=0,
+                end_line=0,
+                file_hash=file_hash
+            )
 
     def _save_chunk(self, rel_path: str, symbol_kind: str, symbol_name: str, text: str, start: int, end: int, file_hash: str):
         self.store.upsert_chunk(

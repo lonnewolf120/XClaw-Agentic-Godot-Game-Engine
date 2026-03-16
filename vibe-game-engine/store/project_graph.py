@@ -73,7 +73,10 @@ class ProjectGraphStore:
         """)
 
         # 4. Vector Table (sqlite-vec)
-        # Using 3072 dimensions for gemini-embedding-001 by default
+        # Using 3072 dimensions for gemini-embedding-001 by default.
+        # sqlite-vec uses partition keys as regular metadata columns inside the vec0 table structure 
+        # (supported in some versions) or we query against the metadata table and join. 
+        # The recommended pattern is mapping chunk_id to vectors and joining with `chunk`.
         cursor.execute("""
             CREATE VIRTUAL TABLE IF NOT EXISTS chunk_vec USING vec0(
                 chunk_id TEXT PRIMARY KEY,
@@ -83,6 +86,37 @@ class ProjectGraphStore:
 
         conn.commit()
         conn.close()
+
+    def partitioned_vector_search(self, query_embedding: List[float], index_type: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Executes a vector similarity search strictly partitioned by the requested index_type
+        (e.g., 'engine_api', 'project', 'memory').
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Serialize vector array for sqlite-vec
+        emb_str = json.dumps(query_embedding)
+        
+        # Join the vec0 table with the metadata table to enforce the partition constraint.
+        # This keeps our "engine docs" separate from "project scripts" reducing cross-pollution.
+        try:
+            cursor.execute("""
+                SELECT c.file_path, c.symbol_name, c.symbol_kind, c.text_excerpt, v.distance
+                FROM chunk_vec v
+                JOIN chunk c ON v.chunk_id = c.chunk_id
+                WHERE v.embedding MATCH ? AND c.index_type = ?
+                ORDER BY v.distance
+                LIMIT ?
+            """, (emb_str, index_type, limit))
+            results = [dict(row) for row in cursor.fetchall()]
+        except sqlite3.OperationalError as e:
+            print(f"Vector search failed (sqlite-vec might not be loaded): {e}")
+            results = []
+            
+        conn.close()
+        return results
 
     def generate_hash(self, text: str) -> str:
         return hashlib.sha256(text.encode('utf-8')).hexdigest()

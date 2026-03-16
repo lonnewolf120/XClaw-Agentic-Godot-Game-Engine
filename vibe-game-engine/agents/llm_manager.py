@@ -9,6 +9,7 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, Part
 from vertexai.preview.caching import CachedContent
 import datetime
+from agents.token_logger import TokenEconomicsLogger
 
 # Model configs with Vertex AI
 DEFAULT_MODEL = "gemini-1.5-pro-preview-0409"
@@ -39,11 +40,24 @@ class VertexAIManager:
                                 prompt: str, 
                                 schema: Any, 
                                 model_name: str = DEFAULT_MODEL,
+                                context_label: str = "json_schema_call",
                                 **kwargs: Any) -> Any:
         """Call the model and ask it to conform to a Pydantic schema."""
         model = self.get_chat_model(model_name=model_name, **kwargs)
         structured_llm = model.with_structured_output(schema)
-        return structured_llm.invoke(prompt)
+        response = structured_llm.invoke(prompt)
+        
+        # Log basic un-cached usage. 
+        # (LangChain structured output doesn't trivially expose raw usage metadata yet in all wrappers, 
+        # but we can estimate or attach a callback if needed. For now we record an invocation event).
+        TokenEconomicsLogger.record_usage(
+            model=model_name,
+            cached_tokens=0,
+            prompt_tokens=len(prompt) // 4, # Very rough estimate if raw usage missing
+            output_tokens=500, # Rough estimate for JSON payloads
+            context_label=context_label
+        )
+        return response
 
     def _generate_cache_key(self, system_instruction: str, contents: List[Any]) -> str:
         """Generates a stable fingerprint/hash for the cache content."""
@@ -110,7 +124,16 @@ class VertexAIManager:
         if hasattr(response, "usage_metadata"):
             usage = response.usage_metadata
             cached_tokens = getattr(usage, "cached_content_token_count", 0)
-            print(f"[Telemetry] Used Cache: {cache_name} | Cached Tokens Saved: {cached_tokens} | New Input Tokens: {getattr(usage, 'prompt_token_count', 0)}")
+            prompt_tokens = getattr(usage, "prompt_token_count", 0)
+            output_tokens = getattr(usage, "candidates_token_count", 0)
+            
+            TokenEconomicsLogger.record_usage(
+                model=DEFAULT_MODEL,
+                cached_tokens=cached_tokens,
+                prompt_tokens=prompt_tokens,
+                output_tokens=output_tokens,
+                context_label=f"cached_{cache_name}"
+            )
             
         return response.text
 

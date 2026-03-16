@@ -40,8 +40,39 @@ class SkeletonGraph:
         
         logger.info(f"[{run_id}] Executing PLANNING")
         
+        # 1. Classify Intent
+        from agents.intent_classifier import IntentClassifier
+        classifier = IntentClassifier()
+        intent = classifier.classify(state.prompt)
+        
+        # 2. Retrieve Context
+        from store.project_graph import ProjectGraphStore
+        from agents.retrieval_orchestrator import RetrievalOrchestrator
+        import os
+        
+        db_path = os.path.join(state.workspace_dir, "project_graph.db")
+        # Ensure it exists before querying
+        if not os.path.exists(db_path):
+            from store.project_graph_parser import ProjectGraphParser
+            store = ProjectGraphStore(db_path)
+            parser = ProjectGraphParser(state.workspace_dir, store)
+            parser.sync_project()
+        else:
+            store = ProjectGraphStore(db_path)
+            
+        orchestrator = RetrievalOrchestrator(store)
+        
+        # For MVP token logging, we actually hit the LLM layer via PlannerAgent
+        # using the retrieved context to simulate true token costs.
         planner = PlannerAgent()
-        plan_message = planner.plan(state.prompt)
+        
+        # We pass the composed string context into the planner
+        composed_context = ""
+        if not intent["is_asset_request"]:
+            retrieved = orchestrator.retrieve_for_prompt(state.prompt, [])
+            composed_context = retrieved.get("formatted_context", "")
+
+        plan_message = planner.plan(f"Context:\n{composed_context}\n\nUser Request: {state.prompt}")
         state.plan = plan_message
         
         self.store.append_message(

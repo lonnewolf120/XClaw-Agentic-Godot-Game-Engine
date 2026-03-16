@@ -41,8 +41,15 @@ class LocalGodotExecutor:
         return preview
 
     def execute_batch(self, batch: ActionBatch) -> bool:
-        """Executes the sequence of schema actions."""
+        """
+        Executes the sequence of schema actions.
+        In the future Godot fork, this will map to EditorUndoRedoManager transactions.
+        For now, we execute linear file changes.
+        """
         logger.info(f"Executing batch: {batch.description}")
+        
+        # Conceptually start transaction here
+        # godot_undo_redo.create_action("AI Edit: " + batch.description)
         
         for idx, wrapper in enumerate(batch.actions):
             action_type = wrapper.action_type
@@ -63,10 +70,13 @@ class LocalGodotExecutor:
                     logger.warning(f"Unimplemented action: {action_type}")
             except Exception as e:
                 logger.error(f"Failed executing action {idx} ({action_type}): {e}")
+                # Conceptually rollback here if we had a live editor connection
+                # godot_undo_redo.undo()
                 return False
 
+        # Conceptually commit transaction here
+        # godot_undo_redo.commit_action()
         return True
-
     def _create_script(self, action):
         import os
         script_path = action.script_path.replace("res://", "").lstrip('/')

@@ -1,0 +1,21 @@
+# Simulated messy project to test retrieval bounds and debugger stress
+[gd_scene load_steps=2 format=3 uid="uid://c6r2n1n2k3m4"]
+
+[ext_resource type="Script" path="res://player/player.gd" id="1_a2b3c"]
+[ext_resource type="Script" path="res://enemy/boss.gd" id="2_d3e4f"]
+
+[node name="MessyRoot" type="Node2D"]
+
+[node name="OldPlayer" type="CharacterBody2D" parent="."]
+script = ExtResource("1_a2b3c")
+
+[node name="NewPlayer" type="CharacterBody2D" parent="."]
+script = ExtResource("1_a2b3c")
+
+[node name="AbandonedBoss" type="CharacterBody2D" parent="."]
+script = ExtResource("2_d3e4f")
+
+[node name="HUD" type="Control" parent="."]
+
+[connection signal="health_changed" from="OldPlayer" to="HUD" method="_on_old_player_health_changed"]
+[connection signal="health_changed" from="NewPlayer" to="HUD" method="_on_new_player_health_changed"]
