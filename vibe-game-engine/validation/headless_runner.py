@@ -84,26 +84,43 @@ class HeadlessValidator:
                 f.write(f"--- STDERR ---\n{result.stderr}\n")
 
             report.stage_logs.append(str(log_file_path))
+            
+            # Check for known errors in logs even if exit code is 0 (Godot headless can be weird)
+            log_output = (result.stdout + "\n" + result.stderr)
+            known_errors = ["Parse Error:", "SCRIPT ERROR:", "USER ERROR:"]
+            has_known_error = any(error in log_output for error in known_errors)
 
-            if result.returncode == 0:
+            if result.returncode == 0 and not has_known_error:
                 report.success = True
                 report.completed_tiers.append(ValidationTier.HEADLESS_SMOKE)
                 report.summary = f"Headless smoke test passed in {elapsed:.2f}s."
             else:
                 report.success = False
                 report.failed_tier = ValidationTier.HEADLESS_SMOKE
-                report.summary = f"Headless boot failed with exit code {result.returncode}."
+                report.summary = f"Headless boot failed with exit code {result.returncode} or known log error."
+                
                 # Analyze logs for specific Godot errors
                 failure_class = FailureClass.HEADLESS_BOOT_FAIL
-                if "Parse Error:" in result.stderr or "Parse Error:" in result.stdout:
+                if "Parse Error:" in log_output:
                     failure_class = FailureClass.SCRIPT_PARSE_ERROR
+                
+                # Extract context snippet around the error
+                snippet = ""
+                for error in known_errors:
+                    if error in log_output:
+                        error_idx = log_output.find(error)
+                        snippet = log_output[max(0, error_idx - 100) : min(len(log_output), error_idx + 400)]
+                        break
+                
+                if not snippet:
+                    snippet = result.stderr[-500:] if result.stderr else result.stdout[-500:]
                 
                 report.issues.append(ValidationIssue(
                     tier=ValidationTier.HEADLESS_SMOKE,
                     severity=ValidationSeverity.FATAL,
                     failure_class=failure_class,
-                    message=f"Godot headless process exited with {result.returncode}",
-                    context_snippet=result.stderr[-500:] if result.stderr else result.stdout[-500:]
+                    message=f"Godot headless process failed (Exit: {result.returncode})",
+                    context_snippet=snippet
                 ))
 
         except subprocess.TimeoutExpired as e:

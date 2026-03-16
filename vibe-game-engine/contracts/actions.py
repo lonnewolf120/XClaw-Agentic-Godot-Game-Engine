@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional, Literal
+from typing import List, Dict, Any, Optional, Literal, Union, Annotated
 from pydantic import Field
 from contracts.base import StrictModel
 
@@ -30,9 +30,14 @@ class ConnectSignalAction(BaseGodotAction):
     target_node: str = Field(..., description="Path to receiving node")
     method_name: str = Field(..., description="Method to call on target node")
 
+class CreateScriptAction(BaseGodotAction):
+    action_type: Literal["create_script"] = "create_script"
+    script_path: str = Field(..., description="res:// path to the new GDScript")
+    content: str = Field(..., description="Full content of the new script")
+
 class PatchScriptAction(BaseGodotAction):
     action_type: Literal["patch_script"] = "patch_script"
-    script_path: str = Field(..., description="res:// path to the GDScript")
+    script_path: str = Field(..., description="res:// path to the existing GDScript")
     search_string: str = Field(..., description="Exact string to replace")
     replace_string: str = Field(..., description="New string to insert")
 
@@ -40,8 +45,18 @@ class SaveSceneAction(BaseGodotAction):
     action_type: Literal["save_scene"] = "save_scene"
     scene_path: str = Field(..., description="res:// path to save the current scene state")
 
+class GodotActionWrapper(StrictModel):
+    action_type: Literal["create_node", "set_property", "attach_script", "connect_signal", "create_script", "patch_script", "save_scene"] = Field(...)
+    create_node: Optional[CreateNodeAction] = None
+    set_property: Optional[SetPropertyAction] = None
+    attach_script: Optional[AttachScriptAction] = None
+    connect_signal: Optional[ConnectSignalAction] = None
+    create_script: Optional[CreateScriptAction] = None
+    patch_script: Optional[PatchScriptAction] = None
+    save_scene: Optional[SaveSceneAction] = None
+
 class ActionBatch(StrictModel):
     """A collection of actions to be executed sequentially by the Local Executor"""
     description: str = Field(..., description="What this batch is trying to achieve")
-    actions: List[Any] = Field(..., description="List of BaseGodotAction subclasses")
+    actions: List[GodotActionWrapper] = Field(..., description="List of GodotActionWrappers")
     

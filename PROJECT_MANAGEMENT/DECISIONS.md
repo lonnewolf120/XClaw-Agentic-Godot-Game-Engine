@@ -457,9 +457,37 @@ Owner: <role/person>
 
 ---
 
+---
+
+## ADR-019 — Explicit Three-Tier Context Strategy & Caching
+
+**Date:** 2026-03-16  
+**Status:** Accepted  
+**Owner:** Architecture Lead
+
+### Context
+Sending the full engine documentation or broad project state on every run scales token costs linearly and exposes the "Model Denial of Service" risk from runaway agency and unbounded loops.
+
+### Decision
+Adopt a strict **Three-Tier Context Engine** in `tools/context_extractor.py`:
+1. **Project Index**: Fast local lexical search and file counts mapping (only snippets on demand).
+2. **Engine API Index**: RAG-bounded API facts, avoiding raw full-text documentation.
+3. **Workspace Memories**: User preferences and XClaw plugin active-node selections.
+
+Additionally, implement **Explicit Context Caching** in `agents/llm_manager.py` using Vertex AI's `CachedContent` API for stable indices (like the Godot Engine API index) to drastically reduce repetitive token ingestion.
+
+### Consequences
+- Directly bounds token cost per step.
+- Improves latency via explicitly cached contexts.
+- Code becomes slightly more complex by managing Cache TTLs and updating partial project state.
+
+---
+
 ## Change Log
 
 - **2026-03-14**: Initial ADR set created (ADR-001 to ADR-012).
+- **2026-03-16**: Added ADR-019 for Explicit Three-Tier Context & Caching.
+
 ## [2026-03-16] Pivot to Reliability-First 4-Phase MVP
 - **Context:** External review indicated high risk of milestone failure due to multi-agent latency, asset pipeline complexity, and focusing on UX (Editor Plugin) too early.
 - **Decision:** Restructured MVP into Phase 0 (Determinism), Phase 1 (Reliability), Phase 2 (Agent Scaling), Phase 3 (Editor Plugin). MVP archetypes reduced to 3 (2D Platformer, Endless Runner, Narrative). Strict cost constraints (~.85/run).

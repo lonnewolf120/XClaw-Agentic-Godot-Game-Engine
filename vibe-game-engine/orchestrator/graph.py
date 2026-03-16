@@ -170,6 +170,36 @@ class SkeletonGraph:
         self.store.update_run(state)
         return state
 
+    def step_post_commit_refresh(self, run_id: str):
+        """Re-indexes the project graph after successful patches/builds."""
+        state = self.store.load_run(run_id)
+        if not state: return None
+        
+        logger.info(f"[{run_id}] Executing POST_COMMIT_REFRESH")
+        
+        from store.project_graph import ProjectGraphStore
+        from store.project_graph_parser import ProjectGraphParser
+        import os
+        
+        db_path = os.path.join(state.workspace_dir, "project_graph.db")
+        store = ProjectGraphStore(db_path)
+        parser = ProjectGraphParser(state.workspace_dir, store)
+        
+        # Clean up stale chunks before adding new ones
+        valid_files = []
+        for root, _, files in os.walk(state.workspace_dir):
+            if ".godot" in root: continue
+            for f in files:
+                rel_path = f"res://{os.path.relpath(os.path.join(root, f), state.workspace_dir).replace(os.sep, '/')}"
+                valid_files.append(rel_path)
+                
+        store.cleanup_stale_chunks("default", valid_files)
+        
+        # Re-parse changed files (Parser uses hash-based invalidation under the hood)
+        parser.sync_project()
+        
+        return state
+
     def run_all(self, run_id: str):
         logger.info(f"Starting orchestration for: {run_id}")
         self.step_intake(run_id)
@@ -182,5 +212,8 @@ class SkeletonGraph:
             state = self.step_debugging(run_id)
             if state and state.current_node == OrchestrationNode.VALIDATION:
                 state = self.step_validating(run_id)
+
+        if state and state.status == RunStatus.COMPLETED:
+            self.step_post_commit_refresh(run_id)
 
         logger.info(f"Completed orchestration for: {run_id} with final status: {state.status.value if state else 'unknown'}")

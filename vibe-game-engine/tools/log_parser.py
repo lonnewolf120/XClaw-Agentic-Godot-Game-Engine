@@ -8,10 +8,11 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 from contracts.validation import (
+    FailureClass,
     ValidationIssue,
     ValidationReport,
     ValidationSeverity,
-    ValidationStage,
+    ValidationTier,
 )
 
 
@@ -34,13 +35,13 @@ WARNING_PATTERNS: Sequence[Tuple[re.Pattern[str], str]] = (
 )
 
 
-def infer_stage(log_path: Path) -> ValidationStage:
+def infer_stage(log_path: Path) -> ValidationTier:
     name = log_path.name.lower()
     if "import" in name:
-        return ValidationStage.IMPORT
+        return ValidationTier.STATIC_CHECK
     if "check" in name:
-        return ValidationStage.CHECK
-    return ValidationStage.SMOKE
+        return ValidationTier.STATIC_CHECK
+    return ValidationTier.HEADLESS_SMOKE
 
 
 def parse_issues(log_path: Path) -> List[ValidationIssue]:
@@ -49,10 +50,10 @@ def parse_issues(log_path: Path) -> List[ValidationIssue]:
     if not log_path.exists():
         issues.append(
             ValidationIssue(
-                stage=stage,
+                tier=stage,
                 severity=ValidationSeverity.FATAL,
                 message=f"Missing validation log: {log_path}",
-                matched_pattern="missing_log",
+                failure_class=FailureClass.UNKNOWN,
             )
         )
         return issues
@@ -67,11 +68,11 @@ def parse_issues(log_path: Path) -> List[ValidationIssue]:
             if pattern.search(line):
                 issues.append(
                     ValidationIssue(
-                        stage=stage,
+                        tier=stage,
                         severity=ValidationSeverity.FATAL,
                         message=line,
                         file_path=str(log_path),
-                        matched_pattern=token,
+                        failure_class=FailureClass.UNKNOWN,
                     )
                 )
                 matched = True
@@ -84,11 +85,11 @@ def parse_issues(log_path: Path) -> List[ValidationIssue]:
             if pattern.search(line):
                 issues.append(
                     ValidationIssue(
-                        stage=stage,
+                        tier=stage,
                         severity=ValidationSeverity.ERROR,
                         message=line,
                         file_path=str(log_path),
-                        matched_pattern=token,
+                        failure_class=FailureClass.UNKNOWN,
                     )
                 )
                 matched = True
@@ -101,11 +102,11 @@ def parse_issues(log_path: Path) -> List[ValidationIssue]:
             if pattern.search(line):
                 issues.append(
                     ValidationIssue(
-                        stage=stage,
+                        tier=stage,
                         severity=ValidationSeverity.WARNING,
                         message=line,
                         file_path=str(log_path),
-                        matched_pattern=token,
+                        failure_class=FailureClass.UNKNOWN,
                     )
                 )
                 break
@@ -141,8 +142,6 @@ def build_report(run_id: str, attempt: int, log_paths: Iterable[Path]) -> Valida
         )
 
     return ValidationReport(
-        run_id=run_id,
-        attempt=attempt,
         success=success,
         timed_out=False,
         stage_logs=stage_logs,

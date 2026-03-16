@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.runs import router as runs_router
+from api.editor_api import router as editor_router
 from workers.processor import WorkerProcessor
 from store.run_store import RunStore
 from workers.queue import queue_instance
@@ -28,6 +29,7 @@ app.add_middleware(
 )
 
 app.include_router(runs_router)
+app.include_router(editor_router)
 
 @app.get("/health")
 def health_check():

@@ -7,6 +7,14 @@ from uuid import uuid4
 
 from contracts.run_state import RunState, RunStatus, OrchestrationNode
 from contracts.base import StrictModel
+from contracts.actions import ActionBatch
+
+class AgentProposal(StrictModel):
+    proposal_id: str
+    workspace_path: str
+    action_batch_json: str
+    created_at: str
+    status: str = "PENDING"
 
 # Thin abstraction wrapper around SQLite to store our RunState
 
@@ -50,6 +58,15 @@ class RunStore:
                     metadata_json TEXT,
                     created_at TEXT,
                     FOREIGN KEY(run_id) REFERENCES runs(run_id)
+                )
+            ''')
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS proposals (
+                    proposal_id TEXT PRIMARY KEY,
+                    workspace_path TEXT,
+                    action_batch_json TEXT,
+                    status TEXT,
+                    created_at TEXT
                 )
             ''')
             conn.commit()
@@ -123,3 +140,31 @@ class RunStore:
                 art_id, run_id, artifact_type, path, json.dumps(metadata), self._now()
             ))
             conn.commit()
+
+    def store_proposal(self, workspace_path: str, action_batch: ActionBatch) -> str:
+        proposal_id = f"prop_{uuid4().hex[:8]}"
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            c.execute('''
+                INSERT INTO proposals (proposal_id, workspace_path, action_batch_json, status, created_at)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                proposal_id, workspace_path, action_batch.model_dump_json(), "PENDING", self._now()
+            ))
+            conn.commit()
+        return proposal_id
+
+    def load_proposal(self, proposal_id: str) -> Optional[AgentProposal]:
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            c.execute('SELECT proposal_id, workspace_path, action_batch_json, created_at, status FROM proposals WHERE proposal_id = ?', (proposal_id,))
+            row = c.fetchone()
+            if row:
+                return AgentProposal(
+                    proposal_id=row[0],
+                    workspace_path=row[1],
+                    action_batch_json=row[2],
+                    created_at=row[3],
+                    status=row[4]
+                )
+            return None
