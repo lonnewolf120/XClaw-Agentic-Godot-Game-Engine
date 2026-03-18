@@ -77,12 +77,18 @@ class ProjectGraphStore:
         # sqlite-vec uses partition keys as regular metadata columns inside the vec0 table structure 
         # (supported in some versions) or we query against the metadata table and join. 
         # The recommended pattern is mapping chunk_id to vectors and joining with `chunk`.
-        cursor.execute("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS chunk_vec USING vec0(
-                chunk_id TEXT PRIMARY KEY,
-                embedding float[3072]
-            )
-        """)
+        try:
+            cursor.execute("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS chunk_vec USING vec0(
+                    chunk_id TEXT PRIMARY KEY,
+                    embedding float[3072]
+                )
+            """)
+        except sqlite3.OperationalError as e:
+            if str(e) == "no such module: vec0":
+                pass
+            else:
+                raise
 
         conn.commit()
         conn.close()
@@ -252,15 +258,25 @@ class ProjectGraphStore:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        cursor.execute("""
-            SELECT c.file_path, c.symbol_name, c.symbol_kind, c.text_excerpt 
-            FROM chunk_fts f
-            JOIN chunk c ON f.chunk_id = c.chunk_id
-            WHERE chunk_fts MATCH ?
-            ORDER BY rank
-            LIMIT ?
-        """, (query, limit))
+        # Escape quotes and wrap the query in quotes for FTS5
+        escaped_query = query.replace('"', '""')
+        quoted_query = f'"{escaped_query}"'
         
-        results = [dict(row) for row in cursor.fetchall()]
+        # If the quote wrapper still fails on bare queries we might just regex strip it
+        # but wrapping in double quotes is the standard FTS5 way to handle arbitrary phrases
+        try:
+            cursor.execute("""
+                SELECT c.file_path, c.symbol_name, c.symbol_kind, c.text_excerpt 
+                FROM chunk_fts f
+                JOIN chunk c ON f.chunk_id = c.chunk_id
+                WHERE chunk_fts MATCH ?
+                ORDER BY rank
+                LIMIT ?
+            """, (quoted_query, limit))
+            results = [dict(row) for row in cursor.fetchall()]
+        except sqlite3.OperationalError as e:
+            print(f"FTS5 Search failed for query: {query}. Error: {e}")
+            results = []
+            
         conn.close()
         return results

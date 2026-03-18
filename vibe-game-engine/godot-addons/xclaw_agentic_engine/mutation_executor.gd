@@ -102,7 +102,7 @@ func _undo_create_node(parent: Node, new_node: Node) -> void:
 func _validate_set_property(scene_root: Node, params: Dictionary) -> Dictionary:
     var node_path = params.get("node_path", "")
     var property_name = params.get("property_name", "")
-    var new_value = params.get("new_value", null)
+    var new_value = params.get("new_value", params.get("value", null))
     
     var node = scene_root if (node_path == "." or node_path == "") else scene_root.get_node_or_null(node_path)
     
@@ -165,9 +165,9 @@ func _validate_attach_script(scene_root: Node, params: Dictionary) -> Dictionary
 
 # Params: source_node_path, signal_name, target_node_path, method_name
 func _validate_connect_signal(scene_root: Node, params: Dictionary) -> Dictionary:
-    var source_path = params.get("source_node_path", "")
+    var source_path = params.get("source_node_path", params.get("source_node", ""))
     var signal_name = params.get("signal_name", "")
-    var target_path = params.get("target_node_path", "")
+    var target_path = params.get("target_node_path", params.get("target_node", ""))
     var method_name = params.get("method_name", "")
     
     var source = scene_root if source_path in ["", "."] else scene_root.get_node_or_null(source_path)

@@ -52,12 +52,18 @@ func execute_ai_action_batch(action_name: String, batch: Array) -> void:
     
     for pair in batch:
         if pair.has("do_method") and pair["do_method"] is Callable:
-            undo_redo.add_do_method(pair["do_method"])
+            var do_callable: Callable = pair["do_method"]
+            var do_args: Array = [do_callable.get_object(), do_callable.get_method()]
+            do_args.append_array(do_callable.get_bound_arguments())
+            undo_redo.add_do_method.callv(do_args)
         if pair.has("do_property") and pair.has("node") and pair.has("property"):
             undo_redo.add_do_property(pair["node"], pair["property"], pair["do_property"])
             
         if pair.has("undo_method") and pair["undo_method"] is Callable:
-            undo_redo.add_undo_method(pair["undo_method"])
+            var undo_callable: Callable = pair["undo_method"]
+            var undo_args: Array = [undo_callable.get_object(), undo_callable.get_method()]
+            undo_args.append_array(undo_callable.get_bound_arguments())
+            undo_redo.add_undo_method.callv(undo_args)
         if pair.has("undo_property") and pair.has("node") and pair.has("property"):
             undo_redo.add_undo_property(pair["node"], pair["property"], pair["undo_property"])
             

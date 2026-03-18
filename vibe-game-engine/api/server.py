@@ -3,9 +3,11 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 import uuid
 import sys
 import subprocess
+import time
 from pathlib import Path
 from typing import Dict, Any
 
@@ -23,6 +25,10 @@ from tools.godot_ast import build_starter_platformer
 # with cost-saving router logic inline.
 
 app = FastAPI(title="GENESIS ENGINE API", version="0.1.0")
+from api.plugin_bridge import router as plugin_router
+app.include_router(plugin_router)
+logger = logging.getLogger(__name__)
+STARTED_AT = time.time()
 
 # Allow CORS for Next.js
 app.add_middleware(
@@ -42,7 +48,8 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
@@ -76,8 +83,16 @@ def fast_intent_router(prompt: str) -> dict:
 
 
 @app.get("/api/v1/health")
+@app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "FastAPI Backend", "errors": []}
+    return {
+        "status": "ok",
+        "service": "FastAPI Backend",
+        "errors": [],
+        "uptime_seconds": round(time.time() - STARTED_AT, 2),
+        "active_ws_connections": len(manager.active_connections),
+        "plugin_bridge_enabled": True,
+    }
 
 @app.post("/api/v1/launch/{run_id}")
 async def launch_native_preview(run_id: str):
@@ -173,7 +188,10 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        print(f"Client {run_id} disconnected")
+        logger.info("Client %s disconnected", run_id)
+    except Exception as exc:
+        manager.disconnect(websocket)
+        logger.exception("WebSocket pipeline failed for run_id=%s: %s", run_id, exc)
 
 if __name__ == "__main__":
     import uvicorn

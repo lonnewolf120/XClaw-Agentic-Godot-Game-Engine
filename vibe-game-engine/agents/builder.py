@@ -1,71 +1,33 @@
 import os
 import logging
 from typing import Optional
-from langchain_google_vertexai import ChatVertexAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import SystemMessage, HumanMessage
+import json
 
 from contracts.messages import PlanMessage
 from contracts.actions import ActionBatch
+from agents.llm_provider import LLMProviderClient, LLMProviderError
 
 logger = logging.getLogger(__name__)
 
 class ActionBuilderAgent:
-    """
-    Consumes a PlanMessage and current Local Project Context,
-    Returns a strict Pydantic ActionBatch (Structured JSON) schema for local execution.
-    """
-    def __init__(self, model_name: str = "gemini-2.5-flash"):
-        self.model_name = model_name
-        self.use_mock = os.environ.get("USE_MOCK_BUILDER", "false").lower() == "true"
-        
-        if not self.use_mock:
-            self.llm = ChatVertexAI(
-                model_name=self.model_name,
-                temperature=0.0, # ZERO temperature for strict deterministic tool payload
-                max_output_tokens=4096
-            ).with_structured_output(ActionBatch)
+    def __init__(self, provider: str = "gemini", model_name: Optional[str] = None):
+        self.provider = provider
+        self.model = model_name or os.environ.get("XCLAW_LLM_MODEL") or "gemini-3.1-pro-preview"
 
-    def generate_action_batch(self, prompt: str, plan: PlanMessage, context_summary: str) -> ActionBatch:
-        if self.use_mock:
-            logger.info("Using mock Builder (no Vertex AI call)")
-            return ActionBatch(
-                description="Mock adding a jump feature",
-                actions=[
-                    {
-                        "action_type": "patch_script",
-                        "script_path": "res://player.gd",
-                        "search_string": "# Add jump here",
-                        "replace_string": "velocity.y = JUMP_VELOCITY"
-                    }
-                ]
+    def generate_action_batch(self, prompt: str, plan_summary: str, retrieved_context: str) -> ActionBatch:
+        system_prompt = '''You are Godot Builder AI. You mutate the Godot editor state...'''
+        user_prompt = f'''Plan: {plan_summary}\nContext: {retrieved_context}\nUser: {prompt}\nBuild the JSON ActionBatch.'''
+
+        try:
+            client = LLMProviderClient(provider=self.provider, model_name=self.model)
+            data = client.generate_json(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                schema=ActionBatch,
             )
-            
-        system_prompt = """You are an expert Godot Game Engine Builder Agent.
-Your job is to read the Project Context and the Execution Plan, then output a STRCIT ActionBatch JSON that executes the plan.
-
-Constraints:
-- Treat `patch_script` as your primary way to modify behavior. Ensure your `search_string` is an EXACT literal match of code that exists in the files.
-- ALWAYS return the requested JSON schema.
-"""
-        
-        human_prompt = f"""
-USER PROMPT: {prompt}
-
-EXECUTION PLAN:
-{plan.model_dump_json(indent=2)}
-
-LOCAL PROJECT CONTEXT:
-{context_summary}
-
-Generate the ActionBatch to fulfill the plan.
-"""
-        
-        messages = [
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=human_prompt)
-        ]
-        
-        logger.info("Calling Vertex AI Builder Agent (Structured Output mode)...")
-        action_batch = self.llm.invoke(messages)
-        return action_batch
+            valid_keys = ActionBatch.model_fields.keys()
+            filtered_data = {k: v for k, v in data.items() if k in valid_keys}
+            return ActionBatch(**filtered_data)
+        except (LLMProviderError, json.JSONDecodeError, ValueError) as e:
+            logger.error('Provider call failed or returned invalid action batch: %s', e)
+            return ActionBatch(actions=[], description='API Error: ' + str(e))
