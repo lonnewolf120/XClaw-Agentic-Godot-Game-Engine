@@ -4,12 +4,19 @@ import { Mic, Paperclip, SendHorizonal, Shapes, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 const GAME_PRESETS = ["3D Platformer", "FPS Controller", "City Builder", "Top-Down Racing"];
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
+type ExecutionMode = "dashboard_run" | "plugin_delegate";
+type ProviderMode = "gemini" | "gemini_cli" | "copilot_cli" | "codex_cli";
 
 export function PromptInterface({ onRunStart }: { onRunStart?: (runId: string) => void }) {
   const [focused, setFocused] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationLogs, setGenerationLogs] = useState<string[]>([]);
+  const [executionMode, setExecutionMode] = useState<ExecutionMode>("plugin_delegate");
+  const [providerMode, setProviderMode] = useState<ProviderMode>("gemini");
+  const [modelName, setModelName] = useState("gemini-3.1-pro-preview");
 
   const handlePreset = (preset: string) => {
     setPrompt(`Create a ${preset} where I can `);
@@ -22,8 +29,61 @@ export function PromptInterface({ onRunStart }: { onRunStart?: (runId: string) =
     setGenerationLogs([]);
 
     try {
-      // 1. Trigger API
-      const res = await fetch("http://localhost:8000/api/v1/generate", {
+      if (executionMode === "plugin_delegate") {
+        setGenerationLogs(["[Dashboard] Requesting proposal from backend..."]);
+        const proposalRes = await fetch(`${BACKEND_URL}/plugin/proposal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt,
+            selection: [],
+            mode: "scene_mutation",
+            llm_provider: providerMode,
+            llm_model: modelName,
+            options: {
+              llm_provider: providerMode,
+              llm_model: modelName,
+            },
+          }),
+        });
+
+        const proposalData = await proposalRes.json();
+        if (!proposalRes.ok) {
+          throw new Error(proposalData?.detail || "Failed to create proposal");
+        }
+
+        setGenerationLogs((prev) => [
+          ...prev,
+          `[Dashboard] Proposal created: ${proposalData.proposal_id}`,
+          `[Dashboard] Enqueuing proposal for plugin polling...`,
+        ]);
+
+        const enqueueRes = await fetch(`${BACKEND_URL}/plugin/enqueue_proposal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...proposalData,
+            source: "dashboard-nextjs",
+            delegated_at: new Date().toISOString(),
+          }),
+        });
+
+        const enqueueData = await enqueueRes.json();
+        if (!enqueueRes.ok) {
+          throw new Error(enqueueData?.detail || "Failed to enqueue proposal");
+        }
+
+        setGenerationLogs((prev) => [
+          ...prev,
+          `[Dashboard] Enqueued. Queue length: ${enqueueData.queue_length ?? "unknown"}`,
+          `[Dashboard] Waiting for plugin Auto-Poll to pick this up.`,
+        ]);
+        setIsGenerating(false);
+        return;
+      }
+
+      // Legacy dashboard-run mode
+      const res = await fetch(`${BACKEND_URL}/api/v1/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
@@ -34,8 +94,8 @@ export function PromptInterface({ onRunStart }: { onRunStart?: (runId: string) =
         if (onRunStart) {
           onRunStart(data.run_id);
         }
-        // 2. Connect WebSocket to stream logs seamlessly
-        const ws = new WebSocket(`ws://localhost:8000/api/v1/ws/${data.run_id}`);
+        const wsBase = BACKEND_URL.replace(/^http/i, "ws");
+        const ws = new WebSocket(`${wsBase}/api/v1/ws/${data.run_id}`);
         
         ws.onmessage = (event) => {
           const msg = JSON.parse(event.data);
@@ -56,6 +116,7 @@ export function PromptInterface({ onRunStart }: { onRunStart?: (runId: string) =
       }
     } catch (err) {
       console.error(err);
+      setGenerationLogs((prev) => [...prev, `[Dashboard] Error: ${(err as Error).message}`]);
       setIsGenerating(false);
     }
   };
@@ -91,6 +152,33 @@ export function PromptInterface({ onRunStart }: { onRunStart?: (runId: string) =
           
           <div className="flex items-center justify-between px-3 pb-3">
             <div className="flex items-center gap-1">
+                <select
+                  value={executionMode}
+                  onChange={(e) => setExecutionMode(e.target.value as ExecutionMode)}
+                  className="rounded bg-white/5 border border-white/10 text-[10px] uppercase font-mono tracking-wider text-slate-300 px-2 py-1"
+                  disabled={isGenerating}
+                >
+                  <option value="plugin_delegate">Delegate to Plugin</option>
+                  <option value="dashboard_run">Dashboard Run</option>
+                </select>
+                <select
+                  value={providerMode}
+                  onChange={(e) => setProviderMode(e.target.value as ProviderMode)}
+                  className="rounded bg-white/5 border border-white/10 text-[10px] uppercase font-mono tracking-wider text-slate-300 px-2 py-1"
+                  disabled={isGenerating || executionMode !== "plugin_delegate"}
+                >
+                  <option value="gemini">Gemini</option>
+                  <option value="gemini_cli">Gemini CLI</option>
+                  <option value="copilot_cli">Copilot CLI</option>
+                  <option value="codex_cli">Codex CLI</option>
+                </select>
+                <input
+                  value={modelName}
+                  onChange={(e) => setModelName(e.target.value)}
+                  disabled={isGenerating || executionMode !== "plugin_delegate"}
+                  className="w-44 rounded bg-white/5 border border-white/10 text-[10px] font-mono tracking-wider text-slate-200 px-2 py-1"
+                  placeholder="Model"
+                />
               <button className="rounded p-2 text-slate-400 hover:bg-white/5 hover:text-white transition group relative">
                 <Paperclip className="h-4 w-4" />
               </button>

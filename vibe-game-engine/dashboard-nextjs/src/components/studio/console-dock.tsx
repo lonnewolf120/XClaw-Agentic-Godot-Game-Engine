@@ -1,10 +1,64 @@
 "use client";
 
 import { X, Search, Filter } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
+type ActivityEvent = {
+  timestamp: string;
+  level: string;
+  source: string;
+  event_type: string;
+  message: string;
+  details: Record<string, unknown>;
+};
 
 export function ConsoleDock({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState("logs");
+  const [filter, setFilter] = useState("");
+  const [events, setEvents] = useState<ActivityEvent[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchEvents = async () => {
+      try {
+        const source = tab === "godot" ? "plugin_bridge" : tab === "terminal" ? "backend" : "";
+        const query = new URLSearchParams({ limit: "250" });
+        if (source) query.set("source", source);
+        const res = await fetch(`${BACKEND_URL}/api/v1/activities?${query.toString()}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted) {
+          setEvents(Array.isArray(data.events) ? data.events : []);
+        }
+      } catch {
+        // Keep stale events if polling fails.
+      }
+    };
+
+    fetchEvents();
+    const interval = setInterval(fetchEvents, 2000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [tab]);
+
+  const filteredEvents = useMemo(() => {
+    if (!filter.trim()) return events;
+    const q = filter.toLowerCase();
+    return events.filter((e) => {
+      const detailsText = JSON.stringify(e.details || {}).toLowerCase();
+      return (
+        e.message.toLowerCase().includes(q) ||
+        e.source.toLowerCase().includes(q) ||
+        e.event_type.toLowerCase().includes(q) ||
+        detailsText.includes(q)
+      );
+    });
+  }, [events, filter]);
 
   return (
     <div className="flex h-full w-full flex-col font-mono text-sm shadow-[inset_0_1px_rgba(255,255,255,0.1)] custom-scrollbar">
@@ -21,7 +75,9 @@ export function ConsoleDock({ onClose }: { onClose: () => void }) {
             <input 
               type="text" 
               placeholder="Filter logs..." 
-              className="bg-transparent text-xs text-white placeholder-slate-600 outline-none w-32"
+              className="bg-transparent text-xs text-white placeholder-slate-600 outline-none w-40"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
             />
           </div>
           <button className="p-1.5 rounded hover:bg-white/10 text-slate-400 transition ml-1">
@@ -35,19 +91,46 @@ export function ConsoleDock({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="flex-1 overflow-auto bg-[#03050a] p-3 space-y-1 text-xs text-slate-400 font-mono pb-8">
-        <LogLine time="10:45:01" level="info" msg="Starting baseline validation gate..." />
-        <LogLine time="10:45:02" level="info" msg="Importing Kenney starter pack..." />
-        <LogLine time="10:45:05" level="warn" msg="Asset budget approaches local-first policy threshold." />
-        <LogLine time="10:45:08" level="success" msg="Gate C Passed. GDScript compiled successfully." />
-        <LogLine time="10:45:09" level="system" msg="> godot --headless --export-release 'Web' build/index.html" />
-        <LogLine time="10:45:10" level="info" msg="Building HTML5 template..." />
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-amber-500 animate-pulse">█</span>
-          <span className="text-slate-500">Awaiting export completion...</span>
-        </div>
+        {filteredEvents.length === 0 ? (
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-amber-500 animate-pulse">█</span>
+            <span className="text-slate-500">Waiting for live activity stream...</span>
+          </div>
+        ) : (
+          filteredEvents.map((ev, idx) => {
+            const dt = new Date(ev.timestamp);
+            const time = Number.isNaN(dt.getTime())
+              ? "--:--:--"
+              : dt.toLocaleTimeString([], { hour12: false });
+            return (
+              <LogLine
+                key={`${ev.timestamp}-${idx}`}
+                time={time}
+                level={normalizeLevel(ev.level)}
+                msg={`${ev.source}/${ev.event_type}: ${ev.message}${formatDetails(ev.details)}`}
+              />
+            );
+          })
+        )}
       </div>
     </div>
   );
+}
+
+function normalizeLevel(level: string): "info" | "warn" | "error" | "success" | "system" {
+  const lower = (level || "").toLowerCase();
+  if (lower === "error") return "error";
+  if (lower === "warn" || lower === "warning") return "warn";
+  if (lower === "success") return "success";
+  if (lower === "system") return "system";
+  return "info";
+}
+
+function formatDetails(details: Record<string, unknown>): string {
+  if (!details || Object.keys(details).length === 0) return "";
+  const text = JSON.stringify(details);
+  if (text.length <= 160) return ` | ${text}`;
+  return ` | ${text.slice(0, 157)}...`;
 }
 
 function TabButton({ children, active, onClick }: { children: React.ReactNode, active: boolean, onClick: () => void }) {

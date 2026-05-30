@@ -15,6 +15,7 @@ from agents.builder import ActionBuilderAgent
 from contracts.messages import PlanMessage, PlanTask
 from contracts.actions import ActionBatch
 from contracts.run_state import RunState, RunStatus, OrchestrationNode
+from api.activity_monitor import activity_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,10 @@ run_store = RunStore()
 pending_proposals_queue = []
 
 
+def get_plugin_queue_length() -> int:
+    return len(pending_proposals_queue)
+
+
 def _fallback_proposal_response(prompt: str, provider: str, model_name: str, message: str) -> Dict[str, Any]:
     logger.error("Returning fallback proposal response: %s", message)
     return {
@@ -71,13 +76,28 @@ def _fallback_proposal_response(prompt: str, provider: str, model_name: str, mes
 async def enqueue_proposal(req: Dict[str, Any]):
     """Called by dashboard to push a generated proposal to Godot."""
     pending_proposals_queue.append(req)
+    activity_monitor.record(
+        level="info",
+        source="plugin_bridge",
+        event_type="enqueue_proposal",
+        message="Dashboard enqueued proposal for plugin",
+        details={"queue_length": len(pending_proposals_queue), "proposal_id": req.get("proposal_id", "")},
+    )
     return {"status": "enqueued", "queue_length": len(pending_proposals_queue)}
 
 @router.get("/poll")
 async def poll_proposals():
     """Called by Godot every 2 seconds to check if dashboard pushed anything."""
     if pending_proposals_queue:
-        return pending_proposals_queue.pop(0)
+        event = pending_proposals_queue.pop(0)
+        activity_monitor.record(
+            level="info",
+            source="plugin_bridge",
+            event_type="poll_proposals",
+            message="Plugin polled and received proposal",
+            details={"queue_length": len(pending_proposals_queue), "proposal_id": event.get("proposal_id", "")},
+        )
+        return event
     return {"status": "empty"}
 
 
@@ -95,6 +115,13 @@ async def create_proposal(req: ProposalRequest):
     model_name = req.llm_model or req.options.get("llm_model") or os.environ.get("XCLAW_LLM_MODEL") or "gemini-3.1-pro-preview"
 
     try:
+        activity_monitor.record(
+            level="info",
+            source="plugin_bridge",
+            event_type="create_proposal_start",
+            message="Creating proposal",
+            details={"provider": provider, "model": model_name, "mode": req.mode},
+        )
         if req.options.get("api_key"):
             os.environ["GEMINI_API_KEY"] = str(req.options["api_key"])
         if req.options.get("gemini_cli_cmd"):
@@ -204,6 +231,13 @@ async def create_proposal(req: ProposalRequest):
             "token_summary": {"status": "untracked_for_now"}
         }
     except Exception as e:
+        activity_monitor.record(
+            level="error",
+            source="plugin_bridge",
+            event_type="create_proposal_error",
+            message="Unhandled proposal failure",
+            details={"error": str(e), "provider": provider, "model": model_name},
+        )
         logger.exception("Unhandled proposal failure: %s", e)
         return _fallback_proposal_response(req.prompt, provider, model_name, str(e))
 
@@ -211,6 +245,18 @@ async def create_proposal(req: ProposalRequest):
 @router.post("/apply")
 async def apply_proposal(req: ApplyRequest):
     print(f"\n[Bridge] Received native receipts for proposal {req.proposal_id}: {req.apply_status} / {req.editor_validation_status}")
+    activity_monitor.record(
+        level="info" if req.apply_status == "success" else "error",
+        source="plugin_bridge",
+        event_type="apply_proposal",
+        message="Plugin apply callback received",
+        details={
+            "proposal_id": req.proposal_id,
+            "apply_status": req.apply_status,
+            "editor_validation_status": req.editor_validation_status,
+            "receipts_count": len(req.native_receipts),
+        },
+    )
     for r in req.native_receipts:
         print(f"  - {r}")
 

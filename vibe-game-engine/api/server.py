@@ -11,7 +11,8 @@ import time
 from pathlib import Path
 from typing import Dict, Any
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -26,9 +27,38 @@ from tools.godot_ast import build_starter_platformer
 
 app = FastAPI(title="GENESIS ENGINE API", version="0.1.0")
 from api.plugin_bridge import router as plugin_router
+from api.plugin_bridge import get_plugin_queue_length
+from api.activity_monitor import activity_monitor
 app.include_router(plugin_router)
 logger = logging.getLogger(__name__)
 STARTED_AT = time.time()
+
+
+@app.middleware("http")
+async def request_activity_middleware(request: Request, call_next):
+    start = time.time()
+    try:
+        response = await call_next(request)
+        elapsed_ms = int((time.time() - start) * 1000)
+        activity_monitor.record(
+            level="info",
+            source="backend",
+            event_type="http_request",
+            message=f"{request.method} {request.url.path} -> {response.status_code}",
+            details={"elapsed_ms": elapsed_ms, "path": request.url.path, "method": request.method},
+        )
+        return response
+    except Exception as exc:
+        elapsed_ms = int((time.time() - start) * 1000)
+        activity_monitor.record(
+            level="error",
+            source="backend",
+            event_type="http_error",
+            message=f"{request.method} {request.url.path} failed",
+            details={"elapsed_ms": elapsed_ms, "error": str(exc), "path": request.url.path, "method": request.method},
+        )
+        logger.exception("Unhandled HTTP middleware error: %s", exc)
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 # Allow CORS for Next.js
 app.add_middleware(
@@ -92,6 +122,27 @@ async def health_check():
         "uptime_seconds": round(time.time() - STARTED_AT, 2),
         "active_ws_connections": len(manager.active_connections),
         "plugin_bridge_enabled": True,
+        "plugin_queue_length": get_plugin_queue_length(),
+    }
+
+
+@app.get("/api/v1/activities")
+@app.get("/activities")
+async def get_activities(limit: int = 200, source: str | None = None, level: str | None = None):
+    return {
+        "status": "ok",
+        "events": activity_monitor.list_events(limit=limit, source=source, level=level),
+    }
+
+
+@app.get("/api/v1/monitor/snapshot")
+async def monitor_snapshot(limit: int = 100):
+    return {
+        "status": "ok",
+        "uptime_seconds": round(time.time() - STARTED_AT, 2),
+        "active_ws_connections": len(manager.active_connections),
+        "plugin_queue_length": get_plugin_queue_length(),
+        "activities": activity_monitor.list_events(limit=limit),
     }
 
 @app.post("/api/v1/launch/{run_id}")

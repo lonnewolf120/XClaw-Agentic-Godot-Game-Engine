@@ -2,19 +2,26 @@ import { useEffect, useState } from "react";
 import { Server, Monitor, Gamepad2, AlertCircle } from "lucide-react";
 import { cn } from "../../lib/utils";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
 export function ServiceStatus() {
   const [backendStatus, setBackendStatus] = useState<"checking" | "up" | "down">("checking");
+  const [pluginStatus, setPluginStatus] = useState<"checking" | "up" | "down">("checking");
   const [godotStatus, setGodotStatus] = useState<"checking" | "up" | "down">("checking");
   const [frontendStatus] = useState<"up">("up"); // Always up if React is rendering
   const [backendErrors, setBackendErrors] = useState<string[]>([]);
+  const [pluginQueue, setPluginQueue] = useState<number>(0);
   
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/v1/health", { cache: "no-store", mode: "cors" });
+        const res = await fetch(`${BACKEND_URL}/api/v1/health`, { cache: "no-store", mode: "cors" });
         if (res.ok) {
           const data = await res.json();
           setBackendStatus("up");
+          if (typeof data.plugin_queue_length === "number") {
+            setPluginQueue(data.plugin_queue_length);
+          }
           if (data.errors && data.errors.length > 0) {
              setBackendErrors(data.errors);
           } else {
@@ -26,6 +33,21 @@ export function ServiceStatus() {
       } catch (err) {
         setBackendStatus("down");
         setBackendErrors(["Connection to 127.0.0.1:8000 refused. Is the FastAPI server running?"]);
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/plugin/status`, { cache: "no-store", mode: "cors" });
+        if (res.ok) {
+          const data = await res.json();
+          setPluginStatus("up");
+          if (typeof data.queue_length === "number") {
+            setPluginQueue(data.queue_length);
+          }
+        } else {
+          setPluginStatus("down");
+        }
+      } catch {
+        setPluginStatus("down");
       }
       
       // Check Godot mock status (can be expanded later if Godot bridge exposes an API)
@@ -64,6 +86,16 @@ export function ServiceStatus() {
               ))}
            </div>
          )}
+      </div>
+
+      <div className="w-px h-3 bg-white/10" />
+
+      {/* Plugin bridge */}
+      <div className="flex items-center gap-1.5" title={`Plugin Bridge Queue: ${pluginQueue}`}>
+        <Server className={cn("h-3.5 w-3.5", pluginStatus === "up" ? "text-emerald-500" : pluginStatus === "checking" ? "text-amber-500" : "text-red-500")} />
+        <span className="text-[10px] font-mono uppercase text-slate-400">Plugin</span>
+        <div className={cn("h-1.5 w-1.5 rounded-full", pluginStatus === "up" ? "bg-emerald-500" : pluginStatus === "checking" ? "bg-amber-500 animate-pulse" : "bg-red-500")} />
+        <span className="text-[10px] font-mono text-slate-500">Q:{pluginQueue}</span>
       </div>
 
       <div className="w-px h-3 bg-white/10" />

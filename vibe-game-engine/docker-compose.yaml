@@ -30,3 +30,15 @@ services:
       - ./vibe_runs.db:/app/vibe_runs.db
       - ./runs:/app/runs
       - /var/run/docker.sock:/var/run/docker.sock
+  
+  sprite-creator:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./sprite-sheet-creator:/app
+    ports:
+      - "3001:3000"
+    command: sh -c "npm install && npm run dev"
+    environment:
+      - FAL_KEY=${FAL_KEY}
+

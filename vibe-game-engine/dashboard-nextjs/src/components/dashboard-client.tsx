@@ -128,6 +128,25 @@ export default function DashboardClient() {
         </section>
 
         <section className="col-span-12 rounded-xl border border-slate-700 bg-panel/80 p-4 shadow-panel">
+          <h2 className="font-display text-xl">AI Tools Suite</h2>
+          <p className="mt-1 text-sm text-muted">A collection of autonomous development utilities integrated into the engine.</p>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <article className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
+              <p className="text-sm font-semibold text-amber-300">2D Sprite Sheet Creator</p>
+              <p className="mt-1 text-xs text-slate-400">Generate game-ready pixel characters with walk, jump, and attack animations using text prompts.</p>
+              <a
+                href="http://localhost:3001"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 block w-full rounded-md bg-gradient-to-r from-amber-300 to-orange-400 px-3 flex items-center justify-center py-2 text-xs font-bold uppercase tracking-wide text-slate-900"
+              >
+                Launch Tool
+              </a>
+            </article>
+          </div>
+        </section>
+
+        <section className="col-span-12 rounded-xl border border-slate-700 bg-panel/80 p-4 shadow-panel">
           <h2 className="font-display text-xl">Command Console</h2>
           <p className="mt-1 text-sm text-muted">Trigger allowlisted operations from the dashboard backend API.</p>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
