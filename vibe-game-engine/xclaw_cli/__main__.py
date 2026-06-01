@@ -1,0 +1,68 @@
+"""XClaw headless engine CLI.
+
+    python -m xclaw_cli --prompt "Make the player jump much higher" \
+        --template Starter-Kit-3D-Platformer --provider gemini --model gemini-2.0-flash
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+
+from xclaw_cli.engine import generate
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="xclaw_cli", description="Headless LLM Godot game editor")
+    parser.add_argument("--prompt", required=True, help="Natural-language change to make")
+    parser.add_argument(
+        "--template",
+        default=None,
+        help="Template folder under templates/ (omit to auto-select from the prompt)",
+    )
+    parser.add_argument(
+        "--provider", default="anthropic", choices=["anthropic", "gemini", "ollama"], help="LLM provider"
+    )
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Model name (provider default if omitted; anthropic defaults to claude-opus-4-8 — "
+        "pass --model claude-haiku-4-5 for cheaper runs)",
+    )
+    parser.add_argument("--max-attempts", type=int, default=3, help="Self-correction retry cap")
+    args = parser.parse_args(argv)
+
+    from xclaw_cli.llm import LLMError
+
+    try:
+        result = generate(
+            args.prompt,
+            template=args.template,
+            provider=args.provider,
+            model=args.model,
+            max_attempts=args.max_attempts,
+            on_event=lambda m: print(f"[xclaw] {m}", flush=True),
+        )
+    except LLMError as exc:
+        print(f"\nXCLAW_ERROR provider/model failure: {exc}", file=sys.stderr)
+        tips = {
+            "anthropic": "set ANTHROPIC_API_KEY (or run `ant auth login`); for cheaper runs pass --model claude-haiku-4-5.",
+            "claude": "set ANTHROPIC_API_KEY (or run `ant auth login`); for cheaper runs pass --model claude-haiku-4-5.",
+            "gemini": "set a billing-enabled GEMINI_API_KEY, or try --model gemini-2.5-flash.",
+            "ollama": "start Ollama (ollama serve) and pull the model, or switch --provider anthropic.",
+        }
+        print(f"  Tip: {tips.get(args.provider, 'check the provider credentials/quota, or switch --provider.')}",
+              file=sys.stderr)
+        return 2
+    except FileNotFoundError as exc:
+        print(f"\nXCLAW_ERROR {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"\nXCLAW_RESULT ok={result.ok} run_id={result.run_id} "
+        f"template={result.template} attempts={result.attempts} project={result.project_dir}"
+    )
+    return 0 if result.ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
