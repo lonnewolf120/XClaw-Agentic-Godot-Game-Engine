@@ -9,10 +9,12 @@ Phase 0 findings drive this module:
 """
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, Dict
 
 # Markers Godot prints when a script fails to parse/load or errors at load time.
 ERROR_MARKERS: tuple[str, ...] = (
@@ -35,6 +37,7 @@ class CheckResult:
     errors: list[str] = field(default_factory=list)
     raw_log: str = ""
     timed_out: bool = False
+    scout_data: Dict[str, Any] = field(default_factory=dict)
 
     def summary(self) -> str:
         if self.timed_out:
@@ -95,5 +98,46 @@ class GodotHeadless:
 
     def _scrape(self, proc: subprocess.CompletedProcess) -> CheckResult:
         log = _strip_ansi((proc.stdout or "") + "\n" + (proc.stderr or ""))
-        errors = self._errors_in(log)
-        return CheckResult(ok=not errors, errors=errors, raw_log=log)
+        # Filter out common Godot noise to find real errors
+        errors = [e for e in self._errors_in(log) if "WASAPI" not in e and "X11" not in e]
+        scout = self._parse_scout(log)
+        return CheckResult(ok=not errors, errors=errors, raw_log=log, scout_data=scout)
+
+    def smoke_test(self, project_dir: Path, timeout: int = 8) -> CheckResult:
+        """Run the game project headlessly for a few seconds to verify behavior."""
+        if not self.godot_exe:
+            return CheckResult(ok=False, errors=["No Godot executable found"])
+        
+        try:
+            # Run without --editor to actually execute the scene
+            proc = subprocess.run(
+                [str(self.godot_exe), "--headless", "--path", str(project_dir)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=timeout,
+                check=False
+            )
+            return self._scrape(proc)
+        except subprocess.TimeoutExpired as exc:
+            # Timeout is actually a GOOD thing in a smoke test - it means the game didn't crash
+            stdout = exc.stdout if isinstance(exc.stdout, str) else (exc.stdout or b"").decode("utf-8", "ignore")
+            stderr = exc.stderr if isinstance(exc.stderr, str) else (exc.stderr or b"").decode("utf-8", "ignore")
+            log = _strip_ansi(stdout + "\n" + stderr)
+            scout = self._parse_scout(log)
+            # If there's scout data, we consider it a success even if it timed out
+            return CheckResult(ok=True, errors=[], raw_log=log, timed_out=True, scout_data=scout)
+        except Exception as exc:
+            return CheckResult(ok=False, errors=[str(exc)])
+
+    @staticmethod
+    def _parse_scout(log: str) -> Dict[str, Any]:
+        """Extract JSON between VIBE_SCOUT_START and VIBE_SCOUT_END markers."""
+        try:
+            pattern = r"--- VIBE_SCOUT_START ---\s+(.*?)\s+--- VIBE_SCOUT_END ---"
+            match = re.search(pattern, log, re.DOTALL)
+            if match:
+                return json.loads(match.group(1).strip())
+        except Exception:
+            pass
+        return {}

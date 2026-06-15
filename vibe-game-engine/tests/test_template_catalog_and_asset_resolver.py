@@ -47,12 +47,17 @@ def test_template_selector_picks_kenney_city_builder_template() -> None:
     assert selected == "../templates/Starter-Kit-City-Builder"
 
 
-def test_asset_resolver_prefers_local_assets_before_generation() -> None:
+def test_asset_resolver_prefers_local_assets_before_generation(tmp_path: Path) -> None:
+    temp_policy = tmp_path / "operational_policies.json"
+    temp_policy.write_text(
+        '{"asset_resolution": {"mode": "local_first", "generation_cost_per_asset": 40}}',
+        encoding="utf-8",
+    )
     plan = resolve_assets_for_prompt(
         prompt="Create a tiny 2D platformer with jump",
         template_path="templates/base_2d_platformer",
         catalog_path=CATALOG_PATH,
-        policy_path=POLICY_PATH,
+        policy_path=temp_policy,
         workspace_root=PROJECT_ROOT,
     )
 

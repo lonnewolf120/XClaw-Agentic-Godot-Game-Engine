@@ -25,34 +25,45 @@ class LLMClient:
 class GeminiClient(LLMClient):
     name = "gemini"
 
-    def __init__(self, model: str = "gemini-2.0-flash", api_key: str | None = None, temperature: float = 0.2) -> None:
-        key = api_key or os.environ.get("GEMINI_API_KEY", "").strip()
-        if not key:
-            raise LLMError("GEMINI_API_KEY is not set.")
+    def __init__(self, model: str = "gemini-3.5-flash", api_key: str | None = None, temperature: float = 0.2) -> None:
         try:
-            from google import genai  # noqa: F401
-        except Exception as exc:  # pragma: no cover
+            from google import genai
+            from google.genai.types import HttpOptions
+        except Exception as exc:
             raise LLMError(f"google-genai not installed: {exc}") from exc
-        from google import genai
-
-        self._genai = genai
-        self._client = genai.Client(api_key=key)
+        
+        key = api_key or os.environ.get("GEMINI_API_KEY", "").strip()
+        
+        if key:
+            # Gemini Enterprise / AI Studio Mode
+            self._client = genai.Client(
+                api_key=key,
+                http_options=HttpOptions(api_version="v1")
+            )
+        else:
+            # Vertex AI Mode
+            project_id = os.environ.get("GCP_PROJECT", "parents-care-453403")
+            print(f"[xclaw] Using Gemini via Vertex AI (ADC) - Project: {project_id}")
+            self._client = genai.Client(
+                vertexai=True, 
+                project=project_id, 
+                location="us-central1"
+            )
+            
         self.model = model
         self.temperature = temperature
 
     def complete(self, system: str, user: str) -> str:
-        from google.genai import types
-
-        contents = [types.Content(role="user", parts=[types.Part.from_text(text=f"{system}\n\n{user}")])]
-        resp = self._client.models.generate_content(
-            model=self.model,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=self.temperature,
-            ),
-        )
-        return resp.text or ""
+        try:
+            prompt_text = f"{system}\n\nUSER REQUEST AND PROJECT CONTEXT:\n{user}"
+            
+            resp = self._client.models.generate_content(
+                model=self.model,
+                contents=prompt_text
+            )
+            return resp.text or ""
+        except Exception as exc:
+            raise LLMError(f"Gemini/Vertex error: {exc}") from exc
 
 
 class OllamaClient(LLMClient):
@@ -163,7 +174,7 @@ def get_client(provider: str = "anthropic", model: str | None = None, **kwargs) 
     if provider in ("anthropic", "claude"):
         return AnthropicClient(model=model or "claude-opus-4-8", **kwargs)
     if provider == "gemini":
-        return GeminiClient(model=model or "gemini-2.0-flash", **kwargs)
+        return GeminiClient(model=model or "gemini-3.5-flash", **kwargs)
     if provider == "ollama":
         return OllamaClient(model=model or "qwen2.5-coder", **kwargs)
     raise LLMError(

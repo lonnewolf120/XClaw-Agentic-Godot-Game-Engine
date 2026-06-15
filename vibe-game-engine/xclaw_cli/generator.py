@@ -11,21 +11,25 @@ from xclaw_cli.edits import FileWrite, list_files, read_file
 from xclaw_cli.llm import LLMClient, LLMError
 from xclaw_cli.loop import LoopContext
 
-SYSTEM_PROMPT = """You are a senior Godot 4.6 GDScript engineer. You edit an EXISTING, valid
-Godot project (a Kenney starter kit) to satisfy the user's request. The project already runs.
+SYSTEM_PROMPT = """You are a senior Godot 4.6 GDScript engineer. You build a FULLY FUNCTIONAL game by editing an EXISTING, valid Godot project. 
+
+VIBE CORE FRAMEWORK (MANDATORY USE)
+Your project has a high-performance core library at `res://vibe_core/`. Use it to ensure organization and optimization:
+1. VibeEvents (Autoload): The global signal bus. Use it for decoupled events.
+2. VibeState (Autoload): Central game state (score, health, etc.).
+3. VibeTraits (Autoload): Safe logic injection. Use `VibeTraits.add(node, "Name")` to attach logic to nodes without editing their scripts.
+4. VibeEntity (Class): Base class for NPCs/Players with optimized health/damage logic.
 
 HARD RULES
-- Only modify GDScript (.gd) files. Never edit .tscn, .tres, or project.godot.
-- Make scene/behavior changes in code (e.g. in _ready / _process), not by rewriting scenes.
+- PREFER TRAITS: Use the `VibeTraits` system to add modular logic to user-created nodes discovered by the Scout.
+- Do not rewrite user scenes or large existing scripts if a Trait can do the job.
+- Only modify GDScript (.gd) files. Never edit .tscn, .tres, or project.godot directly.
 - Each write REPLACES THE ENTIRE FILE: include the complete, valid GDScript 4.6 file content.
-- Use `func` (never Python `def`). Tabs for indentation, matching the existing files.
-- Preserve existing autoload usage such as the `Audio` singleton; do not remove working code.
-- Keep changes minimal and faithful to the existing code style.
+- Use `func` (never Python `def`). Tabs for indentation.
 
 OUTPUT
-Return STRICT JSON only, no prose, no markdown fences:
+Return STRICT JSON only:
 {"summary": "<one line>", "writes": [{"path": "res://scripts/x.gd", "content": "<full file>"}]}
-If repairing errors, fix exactly the reported parse/script errors and return the corrected files.
 """
 
 _MAX_FILE_CHARS = 6000
@@ -54,6 +58,24 @@ def _build_user_prompt(ctx: LoopContext) -> str:
             + "\n".join(ctx.last_errors[:15])
             + "\nReturn corrected full files that fix these errors."
         )
+
+    # Summarize Runtime Scouting
+    if hasattr(ctx, 'scout_data') and ctx.scout_data:
+        parts.append("\nRUNTIME SCENE INSIGHTS (SCOUT):")
+        globals = ctx.scout_data.get("globals", {})
+        if globals:
+            parts.append(f"Globals (VibeState): {json.dumps(globals)}")
+        
+        # Flattened list of significant user nodes
+        nodes = []
+        def _walk(n, depth=0):
+            if not n.get("name", "").startswith("@@"):
+                nodes.append(f"{'  '*depth}- {n['name']} ({n['type']})")
+                for c in n.get("children", []):
+                    _walk(c, depth+1)
+        
+        _walk(ctx.scout_data.get("tree", {}))
+        parts.append("Scene Tree:\n" + "\n".join(nodes[:50]))
 
     return "\n".join(parts)
 

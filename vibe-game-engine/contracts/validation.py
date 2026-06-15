@@ -18,6 +18,12 @@ class ValidationSeverity(str, Enum):
     FATAL = "fatal"
 
 
+class ValidationStage(str, Enum):
+    IMPORT = "import"
+    CHECK = "check"
+    SMOKE = "smoke"
+
+
 class ValidationTier(str, Enum):
     STATIC_CHECK = "static_check"
     EDITOR_SAFE = "editor_safe"
@@ -39,17 +45,21 @@ class FailureClass(str, Enum):
 
 class ValidationIssue(StrictModel):
 
-    tier: ValidationTier
+    tier: Optional[ValidationTier] = None
+    stage: Optional[ValidationStage] = None
     severity: ValidationSeverity
-    failure_class: FailureClass
+    failure_class: Optional[FailureClass] = None
     message: StrictStr
     file_path: Optional[StrictStr] = None
     line: Optional[PositiveStrictInt] = None
     context_snippet: Optional[StrictStr] = None
+    matched_pattern: Optional[StrictStr] = None
 
 
 class ValidationReport(StrictModel):
 
+    run_id: Optional[StrictStr] = None
+    attempt: Optional[PositiveStrictInt] = None
     success: StrictBool
     timed_out: StrictBool = False
     completed_tiers: List[ValidationTier] = Field(default_factory=list)

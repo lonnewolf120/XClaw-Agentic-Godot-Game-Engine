@@ -25,6 +25,7 @@ from contracts.validation import (
     ValidationSeverity,
     ValidationTier,
     FailureClass,
+    ValidationStage,
 )
 
 __all__ = [
@@ -62,4 +63,5 @@ __all__ = [
     "ValidationSeverity",
     "ValidationTier",
     "FailureClass",
+    "ValidationStage",
 ]

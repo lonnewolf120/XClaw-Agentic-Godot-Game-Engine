@@ -1,7 +1,10 @@
 """XClaw headless engine CLI.
 
     python -m xclaw_cli --prompt "Make the player jump much higher" \
-        --template Starter-Kit-3D-Platformer --provider gemini --model gemini-2.0-flash
+        --template Starter-Kit-3D-Platformer --provider anthropic
+
+    # With export:
+    python -m xclaw_cli --prompt "Add double-jump" --export --export-target windows
 """
 from __future__ import annotations
 
@@ -29,6 +32,18 @@ def main(argv: list[str] | None = None) -> int:
         "pass --model claude-haiku-4-5 for cheaper runs)",
     )
     parser.add_argument("--max-attempts", type=int, default=3, help="Self-correction retry cap")
+    parser.add_argument(
+        "--export", action="store_true",
+        help="Export a runnable artifact after a successful LLM loop",
+    )
+    parser.add_argument(
+        "--export-target", default="windows", choices=["windows", "linux", "web"],
+        help="Export platform (default: windows)",
+    )
+    parser.add_argument(
+        "--export-path", default=None,
+        help="Custom output path for the exported artifact",
+    )
     args = parser.parse_args(argv)
 
     from xclaw_cli.llm import LLMError
@@ -40,6 +55,9 @@ def main(argv: list[str] | None = None) -> int:
             provider=args.provider,
             model=args.model,
             max_attempts=args.max_attempts,
+            export=args.export,
+            export_target=args.export_target,
+            export_path=args.export_path,
             on_event=lambda m: print(f"[xclaw] {m}", flush=True),
         )
     except LLMError as exc:
@@ -57,9 +75,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\nXCLAW_ERROR {exc}", file=sys.stderr)
         return 2
 
+    export_info = ""
+    if result.export:
+        if result.export.ok:
+            mb = result.export.size_bytes / (1024 * 1024)
+            export_info = f" export=OK ({mb:.1f}MB -> {result.export.output_path})"
+        else:
+            export_info = f" export=FAILED ({result.export.error})"
+
     print(
         f"\nXCLAW_RESULT ok={result.ok} run_id={result.run_id} "
-        f"template={result.template} attempts={result.attempts} project={result.project_dir}"
+        f"template={result.template} attempts={result.attempts} "
+        f"project={result.project_dir}{export_info}"
     )
     return 0 if result.ok else 1
 

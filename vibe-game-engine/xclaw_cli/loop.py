@@ -19,6 +19,7 @@ class LoopContext:
     project_dir: Path
     attempt: int
     last_errors: list[str] = field(default_factory=list)
+    scout_data: dict = field(default_factory=dict)
 
 
 # A generator inspects the context (prompt + workspace + last_errors) and returns the
@@ -65,21 +66,36 @@ def run_loop(
         emit(f"import: {imp.summary()}")
 
     last_errors: list[str] = []
+    scout_data: dict = {}
     history: list[AttemptRecord] = []
 
     for attempt in range(1, max_attempts + 1):
-        ctx = LoopContext(prompt=prompt, project_dir=project_dir, attempt=attempt, last_errors=last_errors)
+        ctx = LoopContext(
+            prompt=prompt, project_dir=project_dir, attempt=attempt, 
+            last_errors=last_errors, scout_data=scout_data
+        )
         emit(f"attempt {attempt}/{max_attempts}: generating")
         writes = generator(ctx)
         written = apply_writes(project_dir, writes)
         emit(f"attempt {attempt}: wrote {len(written)} file(s)")
 
+        # Phase 1: Syntax Check
         check = godot.check(project_dir)
+        
+        # Phase 2: Behavioral Smoke Test (if syntax passed)
+        if check.ok:
+            emit(f"attempt {attempt}: syntax ok, starting behavioral smoke test...")
+            smoke = godot.smoke_test(project_dir)
+            # Use the smoke test results as the final check result for this attempt
+            check = smoke
+            
         history.append(AttemptRecord(attempt=attempt, files_written=written, check=check))
         emit(f"attempt {attempt}: {check.summary()}")
 
         if check.ok:
             return LoopResult(ok=True, attempts=attempt, history=history)
+        
         last_errors = check.errors
+        scout_data = check.scout_data
 
     return LoopResult(ok=False, attempts=max_attempts, history=history)
