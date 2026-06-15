@@ -8,6 +8,8 @@ Providers:
 from __future__ import annotations
 
 import os
+import shutil
+import subprocess
 from typing import Callable
 
 
@@ -159,6 +161,73 @@ class AnthropicClient(LLMClient):
         raise LLMError("Claude returned no text block")
 
 
+class ClaudeCodeClient(LLMClient):
+    """Claude via the local `claude` CLI (Claude Code) in headless print mode.
+
+    No API key required — reuses the machine's Claude Code subscription/auth. Runs
+    `claude -p --tools "" --output-format text`, which forces a pure text completion
+    (all agent tools disabled, so it cannot read/write files or wrap the answer in a
+    tool transcript). Stdin carries the combined system+user prompt plus a hard
+    JSON-only instruction; the generator's parser tolerates stray fences/prose.
+
+    This is the keyless test path. It does NOT exercise the production AnthropicClient
+    guarantees (structured-output schema, adaptive thinking, prompt caching) — those
+    are bypassed when going through the CLI.
+    """
+
+    name = "claude-code"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        claude_exe: str | None = None,
+        timeout: int = 600,
+    ) -> None:
+        exe = claude_exe or os.environ.get("XCLAW_CLAUDE_EXE", "").strip() or "claude"
+        resolved = exe if os.path.sep in exe else (shutil.which(exe) or exe)
+        if not (os.path.exists(resolved) or shutil.which(exe)):
+            raise LLMError(
+                f"claude CLI not found ('{exe}'). Install Claude Code or set XCLAW_CLAUDE_EXE."
+            )
+        self.claude_exe = resolved
+        self.model = model
+        self.timeout = timeout
+
+    _JSON_GUARD = (
+        "\n\nRESPOND WITH ONLY THE RAW JSON OBJECT described above. "
+        "No prose, no explanation, no markdown code fences. "
+        "Do not attempt to use any tools or edit files yourself — just emit the JSON."
+    )
+
+    def complete(self, system: str, user: str) -> str:
+        prompt = f"{system}\n\n{user}{self._JSON_GUARD}"
+        cmd = [self.claude_exe, "-p", "--tools", "", "--output-format", "text"]
+        if self.model:
+            cmd += ["--model", self.model]
+        try:
+            proc = subprocess.run(
+                cmd,
+                input=prompt,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=self.timeout,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise LLMError(f"claude CLI timed out after {self.timeout}s") from exc
+        except FileNotFoundError as exc:
+            raise LLMError(f"claude CLI not runnable: {exc}") from exc
+        if proc.returncode != 0:
+            raise LLMError(
+                f"claude CLI failed (exit {proc.returncode}): {(proc.stderr or '')[:600]}"
+            )
+        out = (proc.stdout or "").strip()
+        if not out:
+            raise LLMError("claude CLI returned empty output")
+        return out
+
+
 class FakeClient(LLMClient):
     name = "fake"
 
@@ -173,10 +242,13 @@ def get_client(provider: str = "anthropic", model: str | None = None, **kwargs) 
     provider = (provider or "anthropic").strip().lower()
     if provider in ("anthropic", "claude"):
         return AnthropicClient(model=model or "claude-opus-4-8", **kwargs)
+    if provider in ("claude-code", "claude_code", "cc"):
+        return ClaudeCodeClient(model=model, **kwargs)
     if provider == "gemini":
         return GeminiClient(model=model or "gemini-3.5-flash", **kwargs)
     if provider == "ollama":
         return OllamaClient(model=model or "qwen2.5-coder", **kwargs)
     raise LLMError(
-        f"Unknown provider '{provider}'. Use anthropic, gemini, or ollama (or construct FakeClient directly)."
+        f"Unknown provider '{provider}'. Use anthropic, claude-code, gemini, or ollama "
+        "(or construct FakeClient directly)."
     )

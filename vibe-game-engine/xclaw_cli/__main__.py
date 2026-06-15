@@ -23,7 +23,9 @@ def main(argv: list[str] | None = None) -> int:
         help="Template folder under templates/ (omit to auto-select from the prompt)",
     )
     parser.add_argument(
-        "--provider", default="anthropic", choices=["anthropic", "gemini", "ollama"], help="LLM provider"
+        "--provider", default="anthropic",
+        choices=["anthropic", "claude-code", "gemini", "ollama"],
+        help="LLM provider (claude-code = local `claude` CLI, no API key)",
     )
     parser.add_argument(
         "--model",
@@ -65,6 +67,7 @@ def main(argv: list[str] | None = None) -> int:
         tips = {
             "anthropic": "set ANTHROPIC_API_KEY (or run `ant auth login`); for cheaper runs pass --model claude-haiku-4-5.",
             "claude": "set ANTHROPIC_API_KEY (or run `ant auth login`); for cheaper runs pass --model claude-haiku-4-5.",
+            "claude-code": "ensure the `claude` CLI is installed and logged in (claude /login), or set XCLAW_CLAUDE_EXE.",
             "gemini": "set a billing-enabled GEMINI_API_KEY, or try --model gemini-2.5-flash.",
             "ollama": "start Ollama (ollama serve) and pull the model, or switch --provider anthropic.",
         }
