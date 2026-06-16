@@ -15,6 +15,13 @@ signal health_changed(target: Node, current: float, max_health: float)
 signal item_collected(item_name: String, amount: int)
 signal notification_posted(message: String, type: String)
 
+# --- vibe_game runtime (schema-driven authoring) ---
+signal level_started(level_name: String)   # a level finished building and play began
+signal goal_reached                        # player touched the level goal area
+signal coin_collected(amount: int)         # player picked up a scoring collectible
+signal game_won                            # final level's goal reached
+signal lives_changed(lives: int)           # remaining lives changed
+
 func emit_notification(msg: String, type: String = "info"):
 	notification_posted.emit(msg, type)
 	print("[VibeNotification] ", msg)

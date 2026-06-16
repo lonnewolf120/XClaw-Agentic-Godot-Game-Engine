@@ -47,6 +47,27 @@ class CheckResult:
         return f"headless_check_failed: {len(self.errors)} error line(s)"
 
 
+@dataclass
+class PlaytestResult:
+    verdict: str = "NONE"          # PASS | FAIL | NONE
+    checks: int = 0
+    failed: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    timed_out: bool = False
+    raw_log: str = ""
+
+    @property
+    def ok(self) -> bool:
+        return self.verdict == "PASS" and not self.errors
+
+    def summary(self) -> str:
+        if self.errors:
+            return f"playtest_script_errors: {len(self.errors)}"
+        if self.timed_out and self.verdict == "NONE":
+            return "playtest_timed_out_no_verdict"
+        return f"playtest_{self.verdict.lower()} ({self.checks} checks, failed={self.failed})"
+
+
 class GodotHeadless:
     def __init__(self, godot_exe: str, timeout: int = 180) -> None:
         self.godot_exe = godot_exe
@@ -129,6 +150,49 @@ class GodotHeadless:
             return CheckResult(ok=True, errors=[], raw_log=log, timed_out=True, scout_data=scout)
         except Exception as exc:
             return CheckResult(ok=False, errors=[str(exc)])
+
+    def run_playtest(
+        self,
+        project_dir: str | Path,
+        scene: str = "res://vibe_game/playtest_harness.tscn",
+        timeout: int = 120,
+    ) -> "PlaytestResult":
+        """Run the schema-driven playtest harness scene headlessly and parse its verdict.
+
+        The harness prints `VIBE_TEST RESULT verdict=PASS|FAIL checks=N failed=[...]` and then
+        quits, so a normal (non-timeout) exit is expected. The verdict — not the process exit
+        code — decides pass/fail.
+        """
+        try:
+            proc = self._run(["--path", str(project_dir), scene], timeout=timeout)
+            log = _strip_ansi((proc.stdout or "") + "\n" + (proc.stderr or ""))
+            timed_out = False
+        except subprocess.TimeoutExpired as exc:
+            stdout = exc.stdout if isinstance(exc.stdout, str) else (exc.stdout or b"").decode("utf-8", "ignore")
+            log = _strip_ansi(stdout)
+            timed_out = True
+
+        errors = [e for e in self._errors_in(log) if "WASAPI" not in e and "X11" not in e]
+        verdict, checks, failed = self._parse_verdict(log)
+        return PlaytestResult(
+            verdict=verdict,
+            checks=checks,
+            failed=failed,
+            errors=errors,
+            timed_out=timed_out,
+            raw_log=log,
+        )
+
+    @staticmethod
+    def _parse_verdict(log: str) -> tuple[str, int, list[str]]:
+        m = re.search(r"VIBE_TEST RESULT verdict=(\w+) checks=(\d+) failed=\[([^\]]*)\]", log)
+        if not m:
+            return ("NONE", 0, ["no_verdict_emitted"])
+        verdict = m.group(1)
+        checks = int(m.group(2))
+        raw_failed = m.group(3).strip()
+        failed = [s.strip().strip("'\"") for s in raw_failed.split(",") if s.strip()] if raw_failed else []
+        return (verdict, checks, failed)
 
     @staticmethod
     def _parse_scout(log: str) -> Dict[str, Any]:

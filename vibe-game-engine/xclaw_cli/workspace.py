@@ -1,6 +1,7 @@
 """Isolated run workspaces built from a (valid, human-made) Kenney template."""
 from __future__ import annotations
 
+import re
 import shutil
 import stat
 from datetime import datetime, timezone
@@ -9,6 +10,7 @@ from pathlib import Path
 from xclaw_cli import config
 
 VIBE_CORE_SRC = config.XCLAW_DIR / "vibe_core_src"
+VIBE_GAME_SRC = config.XCLAW_DIR / "vibe_game_src"
 
 
 def new_run_id() -> str:
@@ -50,11 +52,61 @@ def _inject_autoloads(project_dir: Path) -> None:
     godot_file.write_text(content, encoding="utf-8")
 
 
-def prepare_workspace(template_name: str, run_id: str | None = None) -> tuple[Path, str]:
+def _inject_game_autoload_and_boot(project_dir: Path) -> None:
+    """Register the GameManager autoload (after VibeCore) and set the boot main_scene.
+
+    GameManager connects to VibeEvents in _ready, so it must load AFTER the VibeCore
+    autoloads — appending its line keeps that order.
+    """
+    godot_file = project_dir / "project.godot"
+    if not godot_file.exists():
+        return
+    content = godot_file.read_text(encoding="utf-8")
+
+    if "GameManager=" not in content:
+        line = 'GameManager="*res://vibe_game/game_manager.gd"\n'
+        if "[autoload]" in content:
+            # Append after the existing autoload block's known last entry if present,
+            # otherwise right after the section header.
+            anchor = 'VibeHUD="*res://vibe_core/hud.gd"\n'
+            if anchor in content:
+                content = content.replace(anchor, anchor + line, 1)
+            else:
+                content = content.replace("[autoload]", "[autoload]\n\n" + line, 1)
+        else:
+            content += '\n[autoload]\n\n' + line
+
+    # Point the project at the boot scene so a plain run plays the menu->levels game.
+    if 'run/main_scene="res://vibe_game/boot.tscn"' not in content:
+        if "run/main_scene=" in content:
+            content = re.sub(
+                r'run/main_scene="[^"]*"',
+                'run/main_scene="res://vibe_game/boot.tscn"',
+                content,
+                count=1,
+            )
+        else:
+            content = content.replace(
+                "[application]",
+                '[application]\n\nrun/main_scene="res://vibe_game/boot.tscn"',
+                1,
+            )
+    godot_file.write_text(content, encoding="utf-8")
+
+
+def prepare_workspace(
+    template_name: str,
+    run_id: str | None = None,
+    inject_game_runtime: bool = False,
+) -> tuple[Path, str]:
     """Copy `templates/<template_name>` into an isolated run dir.
 
     Returns (project_dir, run_id). Raises FileNotFoundError if the template (or its
     project.godot) is missing.
+
+    When ``inject_game_runtime`` is True, also copy the schema-driven ``vibe_game/`` runtime,
+    register the GameManager autoload, and set the boot scene as main_scene. The legacy
+    single-LLM path leaves this False so it is unaffected.
     """
     run_id = run_id or new_run_id()
     source = config.TEMPLATES_DIR / template_name
@@ -77,5 +129,10 @@ def prepare_workspace(template_name: str, run_id: str | None = None) -> tuple[Pa
     if VIBE_CORE_SRC.is_dir():
         shutil.copytree(VIBE_CORE_SRC, vibe_core_dest, dirs_exist_ok=True)
         _inject_autoloads(project_dir)
+
+    # Inject the schema-driven game runtime (opt-in).
+    if inject_game_runtime and VIBE_GAME_SRC.is_dir():
+        shutil.copytree(VIBE_GAME_SRC, project_dir / "vibe_game", dirs_exist_ok=True)
+        _inject_game_autoload_and_boot(project_dir)
 
     return project_dir, run_id
