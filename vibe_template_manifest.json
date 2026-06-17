@@ -1,0 +1,14 @@
+{
+  "template_id": "kenney_starter_kit_racing",
+  "source_repo": "https://github.com/KenneyNL/Starter-Kit-Racing.git",
+  "godot_version": "4.6",
+  "license": "CC0",
+  "features": [
+    "Arcade-like vehicle controls",
+    "Smoke effect",
+    "GridMap based track creation",
+    "3D Models and sounds"
+  ],
+  "engine_catalog_path": "vibe-game-engine/config/template_catalog.json",
+  "editable": true
+}
