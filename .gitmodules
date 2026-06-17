@@ -1,0 +1,84 @@
+[submodule "bolt.diy"]
+	path = bolt.diy
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/bolt.diy
+[submodule "docker-godot-headless"]
+	path = docker-godot-headless
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/docker-godot-headless
+[submodule "godot"]
+	path = godot
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/godot
+[submodule "godot-bridge-mcp-public"]
+	path = godot-bridge-mcp-public
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/godot-bridge-mcp-public
+[submodule "templates/Starter-Kit-3D-Platformer"]
+	path = templates/Starter-Kit-3D-Platformer
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/templates__Starter-Kit-3D-Platformer
+[submodule "templates/Starter-Kit-Basic-Scene"]
+	path = templates/Starter-Kit-Basic-Scene
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/templates__Starter-Kit-Basic-Scene
+[submodule "templates/Starter-Kit-City-Builder"]
+	path = templates/Starter-Kit-City-Builder
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/templates__Starter-Kit-City-Builder
+[submodule "templates/Starter-Kit-FPS"]
+	path = templates/Starter-Kit-FPS
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/templates__Starter-Kit-FPS
+[submodule "templates/Starter-Kit-Racing"]
+	path = templates/Starter-Kit-Racing
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/templates__Starter-Kit-Racing
+[submodule "templates/godot-demo-projects"]
+	path = templates/godot-demo-projects
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/templates__godot-demo-projects
+[submodule "vibe-coder-3d"]
+	path = vibe-coder-3d
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-coder-3d
+[submodule "vibe-game-engine/godot-addons/godot-ai-autonomous-agent"]
+	path = vibe-game-engine/godot-addons/godot-ai-autonomous-agent
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__godot-addons__godot-ai-autonomous-agent
+[submodule "vibe-game-engine/sprite-sheet-creator"]
+	path = vibe-game-engine/sprite-sheet-creator
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__sprite-sheet-creator
+[submodule "vibe-game-engine/templates/Starter-Kit-3D-Platformer"]
+	path = vibe-game-engine/templates/Starter-Kit-3D-Platformer
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__templates__Starter-Kit-3D-Platformer
+[submodule "vibe-game-engine/templates/Starter-Kit-Basic-Scene"]
+	path = vibe-game-engine/templates/Starter-Kit-Basic-Scene
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__templates__Starter-Kit-Basic-Scene
+[submodule "vibe-game-engine/templates/Starter-Kit-City-Builder"]
+	path = vibe-game-engine/templates/Starter-Kit-City-Builder
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__templates__Starter-Kit-City-Builder
+[submodule "vibe-game-engine/templates/Starter-Kit-FPS"]
+	path = vibe-game-engine/templates/Starter-Kit-FPS
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__templates__Starter-Kit-FPS
+[submodule "vibe-game-engine/templates/Starter-Kit-Racing"]
+	path = vibe-game-engine/templates/Starter-Kit-Racing
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__templates__Starter-Kit-Racing
+[submodule "vibe-game-engine/templates/godot-demo-projects"]
+	path = vibe-game-engine/templates/godot-demo-projects
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__templates__godot-demo-projects
+[submodule "vibe-game-engine/templates/vibe-coding-starter-pack-3d-multiplayer"]
+	path = vibe-game-engine/templates/vibe-coding-starter-pack-3d-multiplayer
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibe-game-engine__templates__vibe-coding-starter-pack-3d-multiplayer
+[submodule "vibesdk"]
+	path = vibesdk
+	url = https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+	branch = submodules/vibesdk

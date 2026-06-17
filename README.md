@@ -7,6 +7,24 @@
 High-Level Overview
 The Vibe Game Engine is a fully autonomous, multi-agent game generation system targeting Godot 4.6.1. It relies on AI orchestration to generate standalone executables or live-editable Godot projects from natural-language prompts in under 10 minutes.
 
+## Pull the full repository with submodules
+
+Clone everything in one pass:
+
+```powershell
+git clone --recurse-submodules https://github.com/lonnewolf120/XClaw-Agentic-Godot-Game-Engine.git
+cd "XClaw-Agentic-Godot-Game-Engine"
+git submodule update --init --recursive
+```
+
+Update an existing checkout, including every submodule:
+
+```powershell
+git pull --recurse-submodules
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
 Architectural Paths
 Default (Standalone Export-First):
 Prompt → Planner → Code/Asset Agents → Import → Headless Validate → Debug Loop (max 3 retries) → Export → Package
