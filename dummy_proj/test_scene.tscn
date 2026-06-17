@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dj0ax0ifu18eq"]
+
+[node name="MainNode" type="Node2D" unique_id=172996592]
+
+[node name="BaseMarker" type="Node2D" parent="." unique_id=343101661]
+
+[node name="AIPersist1" type="Node2D" parent="." unique_id=236087431]
+
+[node name="BaseMarker2" type="Node2D" parent="." unique_id=508218169]
+
+[node name="AIPersist2" type="Node2D" parent="." unique_id=1648822048]
+
+[node name="BaseMarker3" type="Node2D" parent="." unique_id=609538916]
+
+[node name="AIPersist3" type="Node2D" parent="." unique_id=464869803]
+
+[node name="BaseMarker4" type="Node2D" parent="." unique_id=1160849092]
+
+[node name="AIPersist4" type="Node2D" parent="." unique_id=1859965488]

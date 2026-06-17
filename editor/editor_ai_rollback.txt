@@ -1,0 +1,9 @@
+void EditorAIActions::rollback_transaction() {
+        if (EditorUndoRedoManager *ur = EditorUndoRedoManager::get_singleton()) {
+                // To safely abort an action in Godot without memory leaks or missing DO states:
+                // 1. Commit the action (executes it and validates internal tree dependencies).
+                // 2. Immediately undo it to revert the scene.
+                ur->commit_action(true);
+                ur->undo();
+        }
+}

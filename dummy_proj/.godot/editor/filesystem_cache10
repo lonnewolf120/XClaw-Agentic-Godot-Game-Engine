@@ -1,0 +1,8 @@
+63f7b34db8d8cdea90c76aacccf841ec
+::res://::1773788126
+editor_test_log.txt::TextFile::-1::1773736564::0::1::::<><><>0<>0<><>::
+test_scene.tscn::PackedScene::7842613486630054604::1773788126::0::1::::<><><>0<>0<><>::
+::res://addons/::1773736515
+::res://addons/ai_tester/::1773737938
+plugin.cfg::TextFile::-1::1773736515::0::1::::<><><>0<>0<><>::
+plugin.gd::GDScript::1896874486485247060::1773738067::0::1::::<>EditorPlugin<><>0<>1<><>::
