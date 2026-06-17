@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AIAssistantResource" format=3 uid="uid://b6lfs2vvha76c"]
+
+[ext_resource type="Resource" uid="uid://b0fti7g31ugs1" path="res://addons/ai_autonomous_agent/llm_providers/gemini.tres" id="1_m0kvu"]
+[ext_resource type="Script" uid="uid://bi0d7x7jkgql8" path="res://addons/ai_autonomous_agent/assistants/ai_assistant_resource.gd" id="2_jfwyp"]
+
+[resource]
+script = ExtResource("2_jfwyp")
+type_name = "ak"
+ai_model = "models/gemini-3.1-pro-preview-customtools"
+llm_provider = ExtResource("1_m0kvu")
+ai_description = "You are an autonomous GDScript programming agent for Godot 4.5. Execute all possible steps to complete the orders given to you."
