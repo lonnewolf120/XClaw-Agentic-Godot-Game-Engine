@@ -1,0 +1,28 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Custom mappings for file types
+*.gd text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.cfg text eol=lf
+
+# Binary files (do not modify line endings)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.svg binary
+*.ttf binary
+*.otf binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+
+# Ignore these files when generating an archive (e.g. Download ZIP from GitHub)
+.gitattributes export-ignore
+.gitignore export-ignore
+.github/ export-ignore
+README.md export-ignore
+LICENSE export-ignore

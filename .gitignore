@@ -1,0 +1,24 @@
+# Project config ignores (User preference)
+project.godot
+.editorconfig
+
+# Godot 4+ specific ignores
+.godot/
+.imported/
+export_presets.cfg
+
+# Mono/C# ignores
+.mono/
+.vscode/
+*.csproj
+*.sln
+
+# OS specific ignores
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Game files
+game/
