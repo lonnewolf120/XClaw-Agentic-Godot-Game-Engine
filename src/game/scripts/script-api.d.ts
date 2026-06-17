@@ -1,0 +1,843 @@
+/**
+ * AUTO-GENERATED Script API Type Declarations
+ * DO NOT EDIT MANUALLY - This file is generated from ScriptAPI.ts
+ *
+ * These types are available in all external scripts executed by the ScriptExecutor
+ * Usage: IDEs will automatically pick up these global types when editing scripts in this directory
+ */
+
+// Global declarations for script runtime environment
+declare global {
+  // ============================================================================
+  // Entity API
+  // ============================================================================
+
+  /**
+   * Entity transform API for position, rotation, and scale operations
+   */
+  interface ITransformAPI {
+    /** Get or set entity position [x, y, z] */
+    position: [number, number, number];
+    /** Get or set entity rotation (euler angles) [x, y, z] */
+    rotation: [number, number, number];
+    /** Get or set entity scale [x, y, z] */
+    scale: [number, number, number];
+
+    /** Translate entity by offset */
+    translate(x: number, y: number, z: number): void;
+    /** Rotate entity by delta (euler angles) */
+    rotate(x: number, y: number, z: number): void;
+
+    /** Set position */
+    setPosition(x: number, y: number, z: number): void;
+    /** Set rotation */
+    setRotation(x: number, y: number, z: number): void;
+    /** Set scale */
+    setScale(x: number, y: number, z: number): void;
+
+    /** Look at target position */
+    lookAt(targetPos: [number, number, number]): void;
+    /** Get forward direction vector */
+    forward(): [number, number, number];
+    /** Get right direction vector */
+    right(): [number, number, number];
+    /** Get up direction vector */
+    up(): [number, number, number];
+  }
+
+  /**
+   * MeshRenderer material API for direct component access
+   */
+  interface IMeshRendererMaterialAPI {
+    /** Set material color */
+    setColor(hex: string | number): void;
+    /** Set metalness (0-1, clamped) */
+    setMetalness(value: number): void;
+    /** Set roughness (0-1, clamped) */
+    setRoughness(value: number): void;
+    /** Set emissive color and intensity */
+    setEmissive(hex: string | number, intensity?: number): void;
+    /** Set texture for a specific material map */
+    setTexture(
+      kind: 'albedo' | 'normal' | 'metallic' | 'roughness' | 'emissive' | 'occlusion',
+      idOrPath: string,
+    ): void;
+  }
+
+  /**
+   * MeshRenderer accessor API
+   */
+  interface IMeshRendererAccessor {
+    /** Get current component data */
+    get(): unknown | null;
+    /** Set component data via partial patch */
+    set(patch: Partial<unknown>): void;
+    /** Enable/disable the mesh renderer */
+    enable(value: boolean): void;
+    /** Material manipulation helpers */
+    material: IMeshRendererMaterialAPI;
+  }
+
+  /**
+   * Camera accessor API
+   */
+  interface ICameraAccessor {
+    /** Get current component data */
+    get(): unknown | null;
+    /** Set component data via partial patch */
+    set(patch: Partial<unknown>): void;
+    /** Set field of view */
+    setFov(fov: number): void;
+    /** Set near/far clipping planes */
+    setClipping(near: number, far: number): void;
+    /** Set projection type */
+    setProjection(type: 'perspective' | 'orthographic'): void;
+    /** Set as main camera */
+    setAsMain(isMain: boolean): void;
+  }
+
+  /**
+   * Light accessor API
+   */
+  interface ILightAccessor {
+    /** Get current component data */
+    get(): unknown | null;
+    /** Set component data via partial patch */
+    set(patch: Partial<unknown>): void;
+    /** Enable/disable light */
+    enable(value: boolean): void;
+    /** Set light type */
+    setType(type: 'directional' | 'point' | 'spot'): void;
+    /** Set light color (RGB 0-1) */
+    setColor(r: number, g: number, b: number): void;
+    /** Set light intensity */
+    setIntensity(intensity: number): void;
+    /** Enable/disable shadow casting */
+    setCastShadow(castShadow: boolean): void;
+    /** Set light direction (for directional/spot lights) */
+    setDirection(x: number, y: number, z: number): void;
+    /** Set light range (for point/spot lights) */
+    setRange(range: number): void;
+    /** Set light decay (for point/spot lights, typically 1 or 2) */
+    setDecay(decay: number): void;
+    /** Set spot light angle (in degrees) */
+    setAngle(angle: number): void;
+    /** Set spot light penumbra (soft edge, 0-1) */
+    setPenumbra(penumbra: number): void;
+    /** Set shadow map size (power of 2, e.g., 512, 1024, 2048) */
+    setShadowMapSize(size: number): void;
+    /** Set shadow bias (to reduce shadow acne) */
+    setShadowBias(bias: number): void;
+  }
+
+  /**
+   * RigidBody accessor API
+   */
+  interface IRigidBodyAccessor {
+    /** Get current component data */
+    get(): unknown | null;
+    /** Set component data via partial patch */
+    set(patch: Partial<unknown>): void;
+    /** Enable/disable physics simulation */
+    enable(value: boolean): void;
+    /** Set body type */
+    setBodyType(type: 'dynamic' | 'kinematic' | 'static'): void;
+    /** Set mass (dynamic bodies only) */
+    setMass(mass: number): void;
+    /** Set gravity scale (0 = no gravity, 1 = normal gravity) */
+    setGravityScale(scale: number): void;
+    /** Set physics material properties */
+    setPhysicsMaterial(friction: number, restitution: number, density?: number): void;
+    /** Apply force to the rigid body */
+    applyForce(force: [number, number, number], point?: [number, number, number]): void;
+    /** Apply impulse to the rigid body (instant velocity change) */
+    applyImpulse(impulse: [number, number, number], point?: [number, number, number]): void;
+    /** Set linear velocity */
+    setLinearVelocity(vel: [number, number, number]): void;
+    /** Get current linear velocity */
+    getLinearVelocity(): [number, number, number];
+    /** Set angular velocity */
+    setAngularVelocity(vel: [number, number, number]): void;
+    /** Get current angular velocity */
+    getAngularVelocity(): [number, number, number];
+  }
+
+  /**
+   * MeshCollider accessor API
+   */
+  interface IMeshColliderAccessor {
+    /** Get current component data */
+    get(): unknown | null;
+    /** Set component data via partial patch */
+    set(patch: Partial<unknown>): void;
+    /** Enable/disable collider */
+    enable(value: boolean): void;
+    /** Set as trigger (no physics collision, only events) */
+    setTrigger(isTrigger: boolean): void;
+    /** Set collider type */
+    setType(type: 'box' | 'sphere' | 'capsule' | 'convex' | 'mesh' | 'heightfield'): void;
+    /** Set collider center offset */
+    setCenter(x: number, y: number, z: number): void;
+    /** Set box size */
+    setBoxSize(width: number, height: number, depth: number): void;
+    /** Set sphere radius */
+    setSphereRadius(radius: number): void;
+    /** Set capsule dimensions */
+    setCapsuleSize(radius: number, height: number): void;
+  }
+
+  /**
+   * Physics Events API for collision/trigger callbacks
+   */
+  interface IPhysicsEventsAPI {
+    /** Register collision enter callback */
+    onCollisionEnter(cb: (otherEntityId: number) => void): () => void;
+    /** Register collision exit callback */
+    onCollisionExit(cb: (otherEntityId: number) => void): () => void;
+    /** Register trigger enter callback */
+    onTriggerEnter(cb: (otherEntityId: number) => void): () => void;
+    /** Register trigger exit callback */
+    onTriggerExit(cb: (otherEntityId: number) => void): () => void;
+  }
+
+  /**
+   * Character Controller API for simple character movement
+   */
+  interface ICharacterControllerAPI {
+    /** Check if character is currently grounded */
+    isGrounded(): boolean;
+    /** Move character horizontally */
+    move(inputXZ: [number, number], speed: number, delta: number): void;
+    /** Make character jump (only when grounded) */
+    jump(strength: number): void;
+    /** Set maximum slope angle */
+    setSlopeLimit(maxDegrees: number): void;
+    /** Set maximum step height */
+    setStepOffset(value: number): void;
+  }
+
+  /**
+   * Entity API - access to entity properties and state
+   */
+  interface IEntityScriptAPI {
+    /** Entity ID */
+    readonly id: number;
+    /** Entity name */
+    readonly name: string;
+    /** Transform operations */
+    transform: ITransformAPI;
+
+    /** Get entity component data */
+    getComponent<T = unknown>(componentType: string): T | null;
+    /** Set or update component data */
+    setComponent<T = unknown>(componentType: string, data: Partial<T>): boolean;
+    /** Check if entity has component */
+    hasComponent(componentType: string): boolean;
+    /** Remove component from entity */
+    removeComponent(componentType: string): boolean;
+
+    // Direct component accessors (KISS approach - optional fields per component)
+    // These are undefined if the component doesn't exist on the entity
+    /** Direct MeshRenderer component access */
+    meshRenderer?: IMeshRendererAccessor;
+    /** Direct Camera component access */
+    camera?: ICameraAccessor;
+    /** Direct Light component access */
+    light?: ILightAccessor;
+    /** Direct RigidBody component access */
+    rigidBody?: IRigidBodyAccessor;
+    /** Direct MeshCollider component access */
+    meshCollider?: IMeshColliderAccessor;
+    /** Physics events for collision/trigger callbacks */
+    physicsEvents?: IPhysicsEventsAPI;
+    /** Character controller for simple character movement */
+    controller?: ICharacterControllerAPI;
+
+    /** Get parent entity */
+    getParent(): IEntityScriptAPI | null;
+    /** Get child entities */
+    getChildren(): IEntityScriptAPI[];
+    /** Find child by name */
+    findChild(name: string): IEntityScriptAPI | null;
+
+    /** Destroy this entity */
+    destroy(): void;
+    /** Set entity active state */
+    setActive(active: boolean): void;
+    /** Check if entity is active */
+    isActive(): boolean;
+  }
+
+  // ============================================================================
+  // Math API
+  // ============================================================================
+
+  /**
+   * Math utility API
+   */
+  interface IMathAPI {
+    // Math constants
+    readonly PI: number;
+    readonly E: number;
+
+    // Basic math functions
+    abs(x: number): number;
+    acos(x: number): number;
+    asin(x: number): number;
+    atan(x: number): number;
+    atan2(y: number, x: number): number;
+    ceil(x: number): number;
+    cos(x: number): number;
+    exp(x: number): number;
+    floor(x: number): number;
+    log(x: number): number;
+    max(...values: number[]): number;
+    min(...values: number[]): number;
+    pow(x: number, y: number): number;
+    random(): number;
+    round(x: number): number;
+    sin(x: number): number;
+    sqrt(x: number): number;
+    tan(x: number): number;
+
+    // Game-specific utilities
+    /** Linear interpolation */
+    lerp(a: number, b: number, t: number): number;
+    /** Clamp value between min and max */
+    clamp(value: number, min: number, max: number): number;
+    /** Distance between two 3D points */
+    distance(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number): number;
+    /** Convert degrees to radians */
+    degToRad(degrees: number): number;
+    /** Convert radians to degrees */
+    radToDeg(radians: number): number;
+  }
+
+  // ============================================================================
+  // Input API
+  // ============================================================================
+
+  /**
+   * Input API - keyboard, mouse, and input actions
+   */
+  interface IInputAPI {
+    // Basic Keyboard Input
+    /**
+     * Check if a key is currently held down.
+     * @param key - Key name (e.g., "w", "space", "shift", "up")
+     * @returns true if key is held down
+     * @example
+     * if (input.isKeyDown("w")) {
+     *   entity.transform.translate(0, 0, -0.1);
+     * }
+     */
+    isKeyDown(key: string): boolean;
+
+    /**
+     * Check if a key was just pressed this frame.
+     * @param key - Key name
+     * @returns true if key was pressed this frame (single trigger)
+     * @example
+     * if (input.isKeyPressed("space")) {
+     *   console.log("Jump!"); // Only fires once per press
+     * }
+     */
+    isKeyPressed(key: string): boolean;
+
+    /**
+     * Check if a key was just released this frame.
+     * @param key - Key name
+     * @returns true if key was released this frame
+     */
+    isKeyReleased(key: string): boolean;
+
+    // Basic Mouse Input
+    /**
+     * Check if a mouse button is currently held down.
+     * @param button - Mouse button (0=left, 1=middle, 2=right)
+     * @returns true if button is held down
+     * @example
+     * if (input.isMouseButtonDown(0)) {
+     *   console.log("Left mouse button held");
+     * }
+     */
+    isMouseButtonDown(button: number): boolean;
+
+    /**
+     * Check if a mouse button was just pressed this frame.
+     * @param button - Mouse button (0=left, 1=middle, 2=right)
+     * @returns true if button was pressed this frame
+     */
+    isMouseButtonPressed(button: number): boolean;
+
+    /**
+     * Check if a mouse button was just released this frame.
+     * @param button - Mouse button (0=left, 1=middle, 2=right)
+     * @returns true if button was released this frame
+     */
+    isMouseButtonReleased(button: number): boolean;
+
+    /**
+     * Get current mouse position relative to canvas.
+     * @returns [x, y] position in pixels
+     */
+    mousePosition(): [number, number];
+
+    /**
+     * Get mouse movement delta since last frame.
+     * @returns [dx, dy] movement in pixels
+     * @example
+     * const [dx, dy] = input.mouseDelta();
+     * entity.transform.rotate(-dy * 0.002, -dx * 0.002, 0);
+     */
+    mouseDelta(): [number, number];
+
+    /**
+     * Get mouse wheel delta.
+     * @returns Wheel movement (positive=up, negative=down)
+     */
+    mouseWheel(): number;
+
+    /**
+     * Lock the mouse pointer for FPS-style controls.
+     * @example
+     * input.lockPointer(); // Enables pointer lock
+     */
+    lockPointer(): void;
+
+    /**
+     * Unlock the mouse pointer.
+     */
+    unlockPointer(): void;
+
+    /**
+     * Check if pointer is currently locked.
+     * @returns true if pointer is locked
+     */
+    isPointerLocked(): boolean;
+
+    // Input Actions System
+    /**
+     * Get current value of an input action (polling).
+     * @param actionMapName - Name of the action map (e.g., "Gameplay", "UI")
+     * @param actionName - Name of the action (e.g., "Move", "Jump")
+     * @returns Action value: number for buttons/axes, [x,y] for 2D vectors, [x,y,z] for 3D vectors
+     * @example
+     * const moveInput = input.getActionValue("Gameplay", "Move");
+     * if (Array.isArray(moveInput)) {
+     *   const [x, y] = moveInput;
+     *   entity.position = [x * speed, 0, y * speed];
+     * }
+     */
+    getActionValue(
+      actionMapName: string,
+      actionName: string,
+    ): number | [number, number] | [number, number, number];
+
+    /**
+     * Check if an input action is currently active (boolean).
+     * @param actionMapName - Name of the action map
+     * @param actionName - Name of the action
+     * @returns true if action is active (value > threshold)
+     * @example
+     * if (input.isActionActive("Gameplay", "Jump")) {
+     *   console.log("Jump is pressed!");
+     * }
+     */
+    isActionActive(actionMapName: string, actionName: string): boolean;
+
+    /**
+     * Subscribe to input action events (event-driven).
+     * @param actionMapName - Name of the action map
+     * @param actionName - Name of the action
+     * @param callback - Function called when action state changes
+     * @example
+     * input.onAction("Gameplay", "Fire", (phase, value) => {
+     *   if (phase === "started") {
+     *     console.log("Fire button pressed!");
+     *   }
+     * });
+     */
+    onAction(
+      actionMapName: string,
+      actionName: string,
+      callback: (
+        phase: 'started' | 'performed' | 'canceled',
+        value: number | [number, number] | [number, number, number],
+      ) => void,
+    ): void;
+
+    /**
+     * Unsubscribe from input action events.
+     * @param actionMapName - Name of the action map
+     * @param actionName - Name of the action
+     * @param callback - The callback function to remove
+     */
+    offAction(
+      actionMapName: string,
+      actionName: string,
+      callback: (
+        phase: 'started' | 'performed' | 'canceled',
+        value: number | [number, number] | [number, number, number],
+      ) => void,
+    ): void;
+
+    /**
+     * Enable an action map.
+     * @param mapName - Name of the action map to enable
+     * @example
+     * input.enableActionMap("UI"); // Enable UI controls
+     */
+    enableActionMap(mapName: string): void;
+
+    /**
+     * Disable an action map.
+     * @param mapName - Name of the action map to disable
+     * @example
+     * input.disableActionMap("Gameplay"); // Disable gameplay controls
+     */
+    disableActionMap(mapName: string): void;
+  }
+
+  // ============================================================================
+  // Time API
+  // ============================================================================
+
+  /**
+   * Time API - time and frame information
+   */
+  interface ITimeAPI {
+    /** Total time elapsed since start (seconds) */
+    time: number;
+    /** Delta time since last frame (seconds) */
+    deltaTime: number;
+    /** Frame count */
+    frameCount: number;
+  }
+
+  // ============================================================================
+  // Console API
+  // ============================================================================
+
+  /**
+   * Console API for script debugging (sandboxed)
+   */
+  interface IConsoleAPI {
+    log(...args: unknown[]): void;
+    warn(...args: unknown[]): void;
+    error(...args: unknown[]): void;
+    info(...args: unknown[]): void;
+  }
+
+  // ============================================================================
+  // Event API
+  // ============================================================================
+
+  /**
+   * Event API for event bus access
+   */
+  interface IEventAPI {
+    /** Subscribe to event */
+    on<T extends string>(type: T, handler: (payload: unknown) => void): () => void;
+    /** Unsubscribe from event */
+    off<T extends string>(type: T, handler: (payload: unknown) => void): void;
+    /** Emit event */
+    emit<T extends string>(type: T, payload: unknown): void;
+  }
+
+  // ============================================================================
+  // Audio API
+  // ============================================================================
+
+  /**
+   * Audio API for sound playback
+   */
+  interface IAudioAPI {
+    /** Play sound from URL */
+    play(url: string, options?: Record<string, unknown>): number;
+    /** Stop sound by handle or URL */
+    stop(handleOrUrl: number | string): void;
+    /** Attach audio to entity for positional sound */
+    attachToEntity?(follow: boolean): void;
+  }
+
+  // ============================================================================
+  // Timer API
+  // ============================================================================
+
+  /**
+   * Timer API for scheduled callbacks
+   */
+  interface ITimerAPI {
+    /** Schedule callback after delay (milliseconds) */
+    setTimeout(callback: () => void, ms: number): number;
+    /** Clear timeout */
+    clearTimeout(id: number): void;
+    /** Schedule repeating callback */
+    setInterval(callback: () => void, ms: number): number;
+    /** Clear interval */
+    clearInterval(id: number): void;
+    /** Wait for next frame */
+    nextTick(): Promise<void>;
+    /** Wait for N frames */
+    waitFrames(count: number): Promise<void>;
+  }
+
+  // ============================================================================
+  // Query API
+  // ============================================================================
+
+  /**
+   * Query API for scene queries
+   */
+  interface IQueryAPI {
+    /** Find entities by tag */
+    findByTag(tag: string): number[]; // entity IDs
+    /** Raycast and get first hit */
+    raycastFirst(origin: [number, number, number], dir: [number, number, number]): unknown | null;
+    /** Raycast and get all hits */
+    raycastAll(origin: [number, number, number], dir: [number, number, number]): unknown[];
+  }
+
+  // ============================================================================
+  // Prefab API
+  // ============================================================================
+
+  /**
+   * Prefab API for entity instantiation and management
+   */
+  interface IPrefabAPI {
+    /** Spawn prefab instance */
+    spawn(prefabId: string, overrides?: Record<string, unknown>): number; // entityId
+    /** Destroy entity (defaults to current entity if not specified) */
+    destroy(entityId?: number): void;
+    /** Set entity active state */
+    setActive(entityId: number, active: boolean): void;
+  }
+
+  // ============================================================================
+  // Entities API
+  // ============================================================================
+
+  /**
+   * Entity reference for cross-entity operations
+   */
+  interface IEntityRef {
+    entityId?: number; // fast path when stable
+    guid?: string; // stable id if available
+    path?: string; // fallback scene path (e.g., Root/Enemy[2]/Weapon)
+  }
+
+  /**
+   * Entities API for entity queries and references
+   */
+  interface IEntitiesAPI {
+    /** Resolve entity reference to API */
+    fromRef(ref: IEntityRef | number | string): IEntityScriptAPI | null;
+    /** Get entity by ID */
+    get(entityId: number): IEntityScriptAPI | null;
+    /** Find entities by name */
+    findByName(name: string): IEntityScriptAPI[];
+    /** Find entities by tag */
+    findByTag(tag: string): IEntityScriptAPI[];
+    /** Check if entity exists */
+    exists(entityId: number): boolean;
+  }
+
+  // ============================================================================
+  // GameObject API
+  // ============================================================================
+
+  /**
+   * GameObject API for runtime entity CRUD operations
+   * Create, modify, and destroy entities at runtime
+   */
+  interface IGameObjectAPI {
+    /**
+     * Create a new empty entity
+     * @param name - Optional entity name (default: "Entity")
+     * @param parent - Optional parent entity ID
+     * @returns Entity ID of created entity
+     * @example
+     * const entityId = gameObject.createEntity("MyEntity");
+     */
+    createEntity(name?: string, parent?: number): number;
+
+    /**
+     * Create a primitive shape entity (cube, sphere, plane, etc.)
+     * @param kind - Primitive type
+     * @param options - Creation options (transform, material, physics)
+     * @returns Entity ID of created primitive
+     * @example
+     * const cubeId = gameObject.createPrimitive('cube', {
+     *   name: 'DynamicCube',
+     *   transform: { position: [0, 5, 0], scale: 1.5 },
+     *   material: { color: '#ff0000', roughness: 0.5 },
+     *   physics: { body: 'dynamic', collider: 'box', mass: 2 }
+     * });
+     */
+    createPrimitive(
+      kind: 'cube' | 'sphere' | 'plane' | 'cylinder' | 'cone' | 'torus',
+      options?: {
+        name?: string;
+        parent?: number;
+        transform?: {
+          position?: [number, number, number];
+          rotation?: [number, number, number];
+          scale?: [number, number, number] | number;
+        };
+        material?: { color?: string; metalness?: number; roughness?: number };
+        physics?: {
+          body?: 'dynamic' | 'kinematic' | 'static';
+          collider?: 'box' | 'sphere' | 'mesh';
+          mass?: number;
+        };
+      },
+    ): number;
+
+    /**
+     * Create a model entity from GLB/GLTF file
+     * @param model - Path or asset ID of model file
+     * @param options - Creation options
+     * @returns Entity ID of created model
+     * @example
+     * const robotId = gameObject.createModel('/assets/models/robot.glb', {
+     *   parent: entity.id,
+     *   transform: { position: [0, 0, 0], scale: 1 },
+     *   physics: { body: 'static', collider: 'mesh' }
+     * });
+     */
+    createModel(
+      model: string,
+      options?: {
+        name?: string;
+        parent?: number;
+        transform?: {
+          position?: [number, number, number];
+          rotation?: [number, number, number];
+          scale?: [number, number, number] | number;
+        };
+        material?: { color?: string; metalness?: number; roughness?: number };
+        physics?: {
+          body?: 'dynamic' | 'kinematic' | 'static';
+          collider?: 'mesh' | 'box';
+          mass?: number;
+        };
+      },
+    ): number;
+
+    /**
+     * Clone an existing entity with optional overrides
+     * @param source - Entity ID to clone
+     * @param overrides - Optional overrides for name, parent, transform
+     * @returns Entity ID of cloned entity
+     * @example
+     * const cloneId = gameObject.clone(originalId, {
+     *   name: 'Clone',
+     *   transform: { position: [5, 0, 0] }
+     * });
+     */
+    clone(
+      source: number,
+      overrides?: {
+        name?: string;
+        parent?: number;
+        transform?: {
+          position?: [number, number, number];
+          rotation?: [number, number, number];
+          scale?: [number, number, number] | number;
+        };
+      },
+    ): number;
+
+    /**
+     * Attach components to an entity
+     * @param entityId - Target entity ID
+     * @param components - Array of components to attach
+     * @example
+     * gameObject.attachComponents(entityId, [
+     *   { type: 'Light', data: { lightType: 'point', color: '#ffffff', intensity: 1 } }
+     * ]);
+     */
+    attachComponents(entityId: number, components: Array<{ type: string; data: unknown }>): void;
+
+    /**
+     * Set parent of an entity
+     * @param entityId - Entity to reparent
+     * @param parent - New parent entity ID (undefined = root)
+     * @example
+     * gameObject.setParent(childId, parentId);
+     */
+    setParent(entityId: number, parent?: number): void;
+
+    /**
+     * Set active state of an entity
+     * @param entityId - Target entity ID
+     * @param active - Active state
+     * @example
+     * gameObject.setActive(entityId, false); // Hide entity
+     */
+    setActive(entityId: number, active: boolean): void;
+
+    /**
+     * Destroy an entity
+     * @param target - Entity ID to destroy (default: current entity)
+     * @example
+     * gameObject.destroy(tempEntityId);
+     * gameObject.destroy(); // Destroy current entity
+     */
+    destroy(target?: number): void;
+  }
+
+  // ============================================================================
+  // Global Variables
+  // ============================================================================
+
+  /** Current entity API */
+  const entity: IEntityScriptAPI;
+
+  /** Math utilities */
+  const math: IMathAPI;
+
+  /** Input API */
+  const input: IInputAPI;
+
+  /** Time API */
+  const time: ITimeAPI;
+
+  /** Console API */
+  const console: IConsoleAPI;
+
+  /** Event bus API */
+  const events: IEventAPI;
+
+  /** Audio API */
+  const audio: IAudioAPI;
+
+  /** Timer API */
+  const timer: ITimerAPI;
+
+  /** Query API */
+  const query: IQueryAPI;
+
+  /** Prefab API */
+  const prefab: IPrefabAPI;
+
+  /** Entities API */
+  const entities: IEntitiesAPI;
+
+  /** GameObject API for runtime entity CRUD */
+  const gameObject: IGameObjectAPI;
+
+  /** Script parameters configured in the editor */
+  const parameters: Record<string, unknown>;
+}
+
+// Note: Scripts can implement these optional lifecycle functions:
+// - onStart(): void
+// - onUpdate(deltaTime: number): void
+// - onDestroy(): void
+// - onEnable(): void
+// - onDisable(): void
+
+export {};

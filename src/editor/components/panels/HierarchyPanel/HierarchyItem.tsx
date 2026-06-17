@@ -1,0 +1,192 @@
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import React, { forwardRef } from 'react';
+import { FiChevronDown, FiChevronRight, FiLock, FiUnlock } from 'react-icons/fi';
+import { TbCube, TbPuzzle } from 'react-icons/tb';
+
+import { componentRegistry } from '@/core/lib/ecs/ComponentRegistry';
+import { EditableEntityName } from '@/editor/components/forms/EditableEntityName';
+
+const CubeIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <TbCube className={className} size={16} />
+);
+
+export interface IHierarchyItemProps {
+  id: number;
+  selected: boolean;
+  onSelect: (id: number, event?: React.MouseEvent) => void;
+  onContextMenu: (event: React.MouseEvent, id: number) => void;
+  name: string;
+  depth?: number;
+  hasChildren?: boolean;
+  isExpanded?: boolean;
+  onToggleExpanded?: (id: number) => void;
+  isDragOver?: boolean;
+  isPartOfSelection?: boolean;
+  isLocked?: boolean;
+  onToggleLock?: (id: number) => void;
+}
+
+export const HierarchyItem = forwardRef<HTMLLIElement, IHierarchyItemProps>(
+  (
+    {
+      id,
+      selected,
+      onSelect,
+      onContextMenu,
+      depth = 0,
+      hasChildren = false,
+      isExpanded = false,
+      onToggleExpanded,
+      isDragOver = false,
+      isPartOfSelection = false,
+      isLocked = false,
+      onToggleLock,
+    },
+    ref,
+  ) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
+      useSortable({ id: id.toString() });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+    const handleClick = (e: React.MouseEvent) => {
+      // Only select if not editing the name
+      if (!(e.target as HTMLElement).matches('input')) {
+        onSelect(id, e);
+      }
+    };
+
+    const handleToggleExpanded = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onToggleExpanded) {
+        onToggleExpanded(id);
+      }
+    };
+
+    const handleToggleLock = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onToggleLock) {
+        onToggleLock(id);
+      }
+    };
+
+    // Check if this entity is a prefab instance
+    const isPrefabInstance = React.useMemo(() => {
+      return componentRegistry.hasComponent(id, 'PrefabInstance');
+    }, [id]);
+
+    return (
+      <li
+        ref={(node) => {
+          setNodeRef(node);
+          if (ref && typeof ref === 'function') {
+            ref(node);
+          } else if (ref) {
+            ref.current = node;
+          }
+        }}
+        style={style}
+        className={`relative text-xs flex items-center outline-none transition-all duration-200 rounded ${
+          isDragging ? 'opacity-50 z-50' : ''
+        } ${
+          isDragOver
+            ? 'bg-blue-600/30 border-blue-400 ring-1 ring-blue-400/50'
+            : isOver
+              ? 'bg-blue-600/20 border-blue-400/50'
+              : ''
+        } ${
+          selected && !isDragOver
+            ? 'bg-gray-700/60 text-gray-100 border border-gray-600/40 shadow-sm'
+            : isPartOfSelection && !isDragOver
+              ? 'bg-blue-700/40 text-blue-100 border border-blue-600/40'
+              : !isDragOver &&
+                'hover:bg-gray-800/50 text-gray-300 border border-transparent hover:border-gray-700/30'
+        }`}
+        onClick={handleClick}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onContextMenu(e, id);
+        }}
+        {...attributes}
+      >
+        {/* Indentation for hierarchy */}
+        <div style={{ width: `${depth * 16}px` }} className="flex-shrink-0 relative">
+          {/* Tree line for hierarchy visualization */}
+          {depth > 0 && <div className="absolute left-2 top-0 bottom-0 w-px bg-gray-600/30"></div>}
+          {depth > 0 && <div className="absolute left-2 top-1/2 w-3 h-px bg-gray-600/30"></div>}
+        </div>
+
+        {/* Expand/collapse toggle */}
+        <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+          {hasChildren && (
+            <button
+              onClick={handleToggleExpanded}
+              className="hover:bg-gray-600/30 rounded text-gray-400 hover:text-gray-200 p-0.5"
+            >
+              {isExpanded ? <FiChevronDown size={10} /> : <FiChevronRight size={10} />}
+            </button>
+          )}
+        </div>
+
+        {/* Drag handle and content */}
+        <div
+          className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer flex-1 min-w-0 ${
+            isPrefabInstance ? 'bg-purple-500/5 border-l-2 border-purple-500/40' : ''
+          }`}
+          {...listeners}
+        >
+          {isPrefabInstance ? (
+            <TbPuzzle
+              className={`${selected ? 'text-purple-300' : isPartOfSelection ? 'text-purple-400' : 'text-purple-500'} transition-colors duration-200 w-3.5 h-3.5 flex-shrink-0`}
+              title="Prefab Instance"
+            />
+          ) : (
+            <CubeIcon
+              className={`${selected ? 'text-blue-300' : isPartOfSelection ? 'text-blue-400' : 'text-gray-400'} transition-colors duration-200 w-3 h-3 flex-shrink-0`}
+            />
+          )}
+          <EditableEntityName
+            entityId={id}
+            enableDoubleClick={true}
+            className={`font-medium truncate flex-1 min-w-0 ${isPrefabInstance ? 'text-purple-200' : ''}`}
+            onDoubleClick={() => {
+              // Prevent selection when double-clicking to edit
+            }}
+          />
+          <div className="ml-auto flex-shrink-0 flex gap-1.5 items-center">
+            {/* Lock icon */}
+            <button
+              onClick={handleToggleLock}
+              className="hover:bg-gray-600/30 rounded p-0.5 transition-colors"
+              title={isLocked ? 'Unlock entity' : 'Lock entity'}
+            >
+              {isLocked ? (
+                <FiLock className="text-yellow-500" size={12} />
+              ) : (
+                <FiUnlock className="text-gray-500 hover:text-gray-300" size={12} />
+              )}
+            </button>
+            {/* Other indicators */}
+            {(selected || isPartOfSelection || isPrefabInstance) && (
+              <>
+                {isPrefabInstance && (
+                  <span className="text-[9px] px-1.5 py-0.5 bg-purple-500/30 text-purple-200 rounded border border-purple-400/40 font-semibold">
+                    PREFAB
+                  </span>
+                )}
+                {selected && <div className="w-1 h-1 bg-blue-400 rounded-full"></div>}
+                {isPartOfSelection && !selected && (
+                  <div className="w-1 h-1 bg-blue-500/60 rounded-full"></div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </li>
+    );
+  },
+);
+HierarchyItem.displayName = 'HierarchyItem';

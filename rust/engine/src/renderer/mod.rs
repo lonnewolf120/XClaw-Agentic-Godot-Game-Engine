@@ -1,0 +1,75 @@
+/// Renderer module - Modular three-d rendering system
+///
+/// This module provides a clean separation of concerns for 3D rendering:
+/// - Camera loading and configuration
+/// - Coordinate system conversion (Three.js ↔ three-d)
+/// - Light component loading
+/// - Material management and caching
+/// - Mesh rendering and loading
+/// - Primitive mesh creation
+/// - Transform conversion utilities
+pub mod audio_loader;
+pub mod bvh_debug;
+pub mod bvh_integration;
+pub mod camera_follow;
+pub mod camera_loader;
+pub mod camera_renderer;
+pub mod constants;
+pub mod coordinate_conversion;
+pub mod debug_gizmos;
+pub mod debug_lines;
+pub mod debug_rendering;
+pub mod enhanced_lights;
+pub mod entity_loader;
+pub mod instanced_loader;
+pub mod light_loader;
+pub mod lighting;
+pub mod lod_manager;
+pub mod lod_selector;
+pub mod material_manager;
+pub mod material_overrides;
+pub mod material_update;
+pub mod mesh_filtering;
+pub mod mesh_loader;
+pub mod orbital_camera;
+pub mod physics_sync;
+pub mod pivot_centering;
+pub mod post_process_targets;
+pub mod post_processing;
+pub mod primitive_mesh;
+pub mod render_settings;
+pub mod scene_loader;
+pub mod scene_utilities;
+pub mod screen_overlay;
+pub mod skybox;
+pub mod terrain_generator;
+pub mod text_overlay;
+pub mod texture_cache;
+pub mod transform_utils;
+pub mod visibility;
+
+// Re-export commonly used types
+pub use bvh_debug::BvhDebugLogger;
+pub use camera_follow::update_camera_follow;
+pub use camera_loader::{create_camera, load_camera, CameraConfig};
+pub use debug_lines::DebugLineRenderer;
+pub use enhanced_lights::{EnhancedDirectionalLight, EnhancedSpotLight};
+pub use instanced_loader::load_instanced;
+pub use light_loader::{load_light, LoadedLight};
+pub use lod_manager::{
+    get_lod_path_internal, normalize_to_original_path, LODConfig, LODManager, LODQuality,
+};
+pub use lod_selector::LODSelector;
+pub use material_manager::MaterialManager;
+pub use material_overrides::apply_material_overrides;
+pub use mesh_loader::load_mesh_renderer;
+pub use orbital_camera::OrbitalCamera;
+pub use post_processing::{apply_post_processing, ColorGradingEffect, PostProcessSettings};
+pub use screen_overlay::ScreenOverlay;
+pub use skybox::SkyboxRenderer;
+pub use terrain_generator::generate_terrain;
+pub use texture_cache::TextureCache;
+pub use visibility::{FallbackVisibilityCuller, VisibilityCuller};
+
+// Re-export Material from vibe-assets for convenience
+pub use vibe_assets::Material;

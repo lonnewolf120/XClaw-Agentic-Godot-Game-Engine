@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@core": ["src/core/index"],
+      "@core/*": ["src/core/*"],
+      "@editor": ["src/editor/index"],
+      "@editor/*": ["src/editor/*"],
+      "@game": ["src/game/index"],
+      "@game/*": ["src/game/*"]
+    }
+  },
+  "include": ["vite.config.ts", "src/plugins/**/*.ts"],
+  "exclude": ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"]
+}

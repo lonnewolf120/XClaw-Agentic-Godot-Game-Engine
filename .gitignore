@@ -1,0 +1,51 @@
+# dependencies
+/node_modules
+
+# production
+/dist
+
+# generated assets (synced from src/game/assets)
+/public/assets
+
+# misc
+.DS_Store
+.env
+.env.*
+
+# local
+*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+agent-session-*.log
+/logs/
+
+# editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+
+# Temporary directories
+/temp_model_processing
+
+# Test reports
+/html
+/coverage
+
+# Model optimization manifest (local cache)
+.model-optimization-manifest.json
+
+.serena/cache
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Rust engine screenshots (temporary test outputs)
+rust/engine/screenshots/

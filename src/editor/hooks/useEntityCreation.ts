@@ -1,0 +1,927 @@
+import { useCallback } from 'react';
+
+import { ICameraData } from '@/core/lib/ecs/components/CameraComponent';
+import { LightData } from '@/core/lib/ecs/components/definitions/LightComponent';
+import { TerrainData } from '@/core/lib/ecs/components/definitions/TerrainComponent';
+import type { GeometryAssetData } from '@/core/lib/ecs/components/definitions';
+import type { CustomShapeData } from '@/core/lib/ecs/components/definitions/CustomShapeComponent';
+import { ITransformData } from '@/core/lib/ecs/components/TransformComponent';
+import { ICharacterControllerData } from '@/core/lib/ecs/components/definitions/CharacterControllerComponent';
+import { KnownComponentTypes } from '@/core/lib/ecs/IComponent';
+import { useEditorStore } from '@/editor/store/editorStore';
+import { shapeRegistry } from '@/core/lib/rendering/shapes/shapeRegistry';
+
+import { useComponentRegistry } from '@/core/hooks/useComponentRegistry';
+import { getGeometryAssetByPath } from '@/core/lib/geometry/metadata/geometryAssetCatalog';
+import { useEntityData } from './useEntityData';
+import { useEntityManager } from './useEntityManager';
+
+export const useEntityCreation = () => {
+  const entityManager = useEntityManager();
+  const { addComponent, updateComponent, removeComponentsForEntity } = useComponentRegistry();
+  const setSelectedId = useEditorStore((state) => state.setSelectedId);
+  const setSelectedIds = useEditorStore((state) => state.setSelectedIds);
+  const { getComponentData } = useEntityData();
+
+  // Helper to get the next available number for entity naming
+  const getNextNumber = useCallback(
+    (baseName: string) => {
+      const entities = entityManager.getAllEntities();
+      const existingNames = entities.map((e) => e.name);
+
+      let number = 0;
+      while (existingNames.includes(`${baseName} ${number}`)) {
+        number++;
+      }
+      return number;
+    },
+    [entityManager],
+  );
+
+  const createEntity = useCallback(
+    (name: string, parentId?: number) => {
+      // Create entity through ECS system
+      const entity = entityManager.createEntity(name, parentId);
+
+      // Add default Transform component
+      const defaultTransform: ITransformData = {
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      };
+
+      addComponent(entity.id, KnownComponentTypes.TRANSFORM, defaultTransform);
+
+      // Select the newly created entity (ensure hierarchy selection highlights)
+      setSelectedIds([entity.id]);
+
+      return entity;
+    },
+    [entityManager, setSelectedIds],
+  );
+
+  const addMeshRenderer = useCallback(
+    (
+      entityId: number,
+      meshId: string,
+      modelPath?: string,
+      overrides?: Partial<{
+        material: {
+          color?: string;
+          shader?: 'standard' | 'unlit';
+          materialType?: 'solid' | 'texture';
+        };
+      }>,
+    ) => {
+      // Add MeshRenderer component with proper material
+      const meshRendererData: {
+        meshId: string;
+        materialId: string;
+        enabled: boolean;
+        castShadows: boolean;
+        receiveShadows: boolean;
+        modelPath?: string;
+        material?: Record<string, unknown>;
+      } = {
+        meshId,
+        materialId: 'default',
+        enabled: true,
+        castShadows: true,
+        receiveShadows: true,
+        modelPath: modelPath, // Add support for custom model paths
+      };
+
+      // Apply optional material overrides
+      if (overrides?.material) {
+        meshRendererData.material = { ...overrides.material };
+      }
+
+      addComponent(entityId, KnownComponentTypes.MESH_RENDERER, meshRendererData);
+    },
+    [addComponent, getComponentData],
+  );
+
+  const createCube = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Cube ${getNextNumber('Cube')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'cube');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createSphere = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Sphere ${getNextNumber('Sphere')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'sphere');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createCylinder = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Cylinder ${getNextNumber('Cylinder')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'cylinder');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createCone = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Cone ${getNextNumber('Cone')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'cone');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createTorus = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Torus ${getNextNumber('Torus')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'torus');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createPlane = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Plane ${getNextNumber('Plane')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'plane');
+
+      // Position the plane to be parallel to the floor (rotate -90 degrees on X axis)
+      const transformData: ITransformData = {
+        position: [0, 0, 0],
+        rotation: [-90, 0, 0], // Rotate to lay flat on the floor
+        scale: [10, 10, 1], // Make it larger and thinner like a ground plane
+      };
+
+      updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+
+      return entity;
+    },
+    [createEntity, addMeshRenderer, updateComponent, getNextNumber],
+  );
+
+  const createGeometryAssetEntity = useCallback(
+    (
+      path: string,
+      config?: {
+        name?: string;
+        parentId?: number;
+        geometryId?: string;
+        materialId?: string;
+        enabled?: boolean;
+        castShadows?: boolean;
+        receiveShadows?: boolean;
+        options?: GeometryAssetData['options'];
+        transform?: Partial<ITransformData>;
+      },
+    ) => {
+      const normalizedPath = path.startsWith('/') ? path : `/${path.replace(/^\.?\/*/, '')}`;
+      const summary = getGeometryAssetByPath(normalizedPath);
+
+      const inferredName =
+        config?.name ??
+        summary?.name ??
+        normalizedPath.split('/').pop()?.replace('.shape.json', '') ??
+        'Geometry Asset';
+
+      const actualName = `${inferredName} ${getNextNumber(inferredName)}`;
+      const entity = createEntity(actualName, config?.parentId);
+
+      const geometryAssetData: GeometryAssetData = {
+        path: normalizedPath,
+        geometryId: config?.geometryId,
+        materialId: config?.materialId,
+        enabled: config?.enabled ?? true,
+        castShadows: config?.castShadows ?? true,
+        receiveShadows: config?.receiveShadows ?? true,
+        options: config?.options,
+      };
+
+      addComponent(entity.id, KnownComponentTypes.GEOMETRY_ASSET, geometryAssetData);
+
+      if (config?.transform) {
+        const transformData: ITransformData = {
+          position: config.transform.position ?? [0, 0, 0],
+          rotation: config.transform.rotation ?? [0, 0, 0],
+          scale: config.transform.scale ?? [1, 1, 1],
+        };
+        updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+      }
+
+      return entity;
+    },
+    [addComponent, createEntity, getNextNumber, updateComponent],
+  );
+
+  const createTerrain = useCallback(
+    (name?: string, parentId?: number, config?: Partial<TerrainData>) => {
+      const actualName = name || `Terrain ${getNextNumber('Terrain')}`;
+      const entity = createEntity(actualName, parentId);
+
+      // Assign renderer with terrain-appropriate color
+      const terrainColor = config?.noiseEnabled ? '#4a9f4a' : '#808080';
+      addMeshRenderer(entity.id, 'terrain', undefined, { material: { color: terrainColor } });
+
+      const terrainDefaults: TerrainData = {
+        size: [20, 20] as [number, number],
+        segments: [129, 129] as [number, number],
+        heightScale: 3,
+        noiseEnabled: true,
+        noiseSeed: Math.floor(Math.random() * 100000),
+        noiseFrequency: 4,
+        noiseOctaves: 5,
+        noisePersistence: 0.5,
+        noiseLacunarity: 2.1,
+        ...config, // Apply any provided configuration
+      };
+      addComponent(entity.id, 'Terrain', terrainDefaults);
+
+      // Add a fixed rigid body so terrain participates in physics (as a static ground)
+      addComponent(entity.id, KnownComponentTypes.RIGID_BODY, {
+        enabled: true,
+        bodyType: 'fixed',
+        mass: 1,
+        gravityScale: 1,
+        canSleep: true,
+        material: {
+          friction: 0.9,
+          restitution: 0.0,
+          density: 1,
+        },
+      });
+
+      // Add MeshCollider component with heightfield type for terrain
+      addComponent(entity.id, KnownComponentTypes.MESH_COLLIDER, {
+        enabled: true,
+        colliderType: 'heightfield',
+        isTrigger: false,
+        center: [0, 0, 0],
+        size: {
+          radius: 0.5,
+          capsuleRadius: 0.5,
+          capsuleHeight: 2,
+          width: 20,
+          height: 1,
+          depth: 20,
+        },
+        physicsMaterial: {
+          friction: 0.9,
+          restitution: 0.0,
+          density: 1,
+        },
+      });
+
+      const transformData: ITransformData = {
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      };
+      updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+
+      return entity;
+    },
+    [createEntity, addMeshRenderer, addComponent, updateComponent, getNextNumber],
+  );
+
+  const createWall = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Wall ${getNextNumber('Wall')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'Wall');
+
+      // Position the wall upright (default orientation is good)
+      const transformData: ITransformData = {
+        position: [0, 0.5, 0], // Position at ground level (half height up)
+        rotation: [0, 0, 0], // Upright wall
+        scale: [1, 1, 1], // Standard scale
+      };
+
+      updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+
+      return entity;
+    },
+    [createEntity, addMeshRenderer, updateComponent, getNextNumber],
+  );
+
+  const createCamera = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Camera ${getNextNumber('Camera')}`;
+      const entity = createEntity(actualName, parentId);
+
+      // Add Camera component with default Unity-like settings
+      const defaultCamera: ICameraData = {
+        fov: 20,
+        near: 0.1,
+        far: 1000,
+        projectionType: 'perspective',
+        orthographicSize: 10,
+        depth: 0,
+        isMain: false,
+      };
+      addComponent(entity.id, KnownComponentTypes.CAMERA, defaultCamera);
+
+      return entity;
+    },
+    [createEntity, addComponent, getNextNumber],
+  );
+
+  const createDirectionalLight = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Directional Light ${getNextNumber('Directional Light')}`;
+      const entity = createEntity(actualName, parentId);
+
+      // Add Light component with directional light defaults
+      const defaultLightData: LightData = {
+        lightType: 'directional',
+        color: { r: 1.0, g: 1.0, b: 1.0 },
+        intensity: 1.0,
+        enabled: true,
+        castShadow: true,
+        directionX: 0.0,
+        directionY: -1.0,
+        directionZ: 0.0,
+        shadowMapSize: 2048,
+        shadowBias: -0.0001,
+        shadowRadius: 1.0,
+      };
+      addComponent(entity.id, KnownComponentTypes.LIGHT, defaultLightData);
+
+      return entity;
+    },
+    [createEntity, addComponent, getNextNumber],
+  );
+
+  const createPointLight = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Point Light ${getNextNumber('Point Light')}`;
+      const entity = createEntity(actualName, parentId);
+
+      // Add Light component with point light defaults
+      const defaultLightData: LightData = {
+        lightType: 'point',
+        color: { r: 1.0, g: 1.0, b: 1.0 },
+        intensity: 1.0,
+        enabled: true,
+        castShadow: true,
+        range: 10.0,
+        decay: 1.0,
+        shadowMapSize: 1024,
+        shadowBias: -0.0001,
+        shadowRadius: 1.0,
+      };
+      addComponent(entity.id, KnownComponentTypes.LIGHT, defaultLightData);
+
+      return entity;
+    },
+    [createEntity, addComponent, getNextNumber],
+  );
+
+  const createSpotLight = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Spot Light ${getNextNumber('Spot Light')}`;
+      const entity = createEntity(actualName, parentId);
+
+      // Add Light component with spot light defaults
+      const defaultLightData: LightData = {
+        lightType: 'spot',
+        color: { r: 1.0, g: 1.0, b: 1.0 },
+        intensity: 1.0,
+        enabled: true,
+        castShadow: true,
+        range: 10.0,
+        decay: 1.0,
+        angle: Math.PI / 6, // 30 degrees
+        penumbra: 0.1,
+        shadowMapSize: 1024,
+        shadowBias: -0.0001,
+        shadowRadius: 1.0,
+      };
+      addComponent(entity.id, KnownComponentTypes.LIGHT, defaultLightData);
+
+      return entity;
+    },
+    [createEntity, addComponent, getNextNumber],
+  );
+
+  const createAmbientLight = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Ambient Light ${getNextNumber('Ambient Light')}`;
+      const entity = createEntity(actualName, parentId);
+
+      // Add Light component with ambient light defaults
+      const defaultLightData: LightData = {
+        lightType: 'ambient',
+        color: { r: 0.4, g: 0.4, b: 0.4 },
+        intensity: 0.5,
+        enabled: true,
+        castShadow: false,
+      };
+      addComponent(entity.id, KnownComponentTypes.LIGHT, defaultLightData);
+
+      return entity;
+    },
+    [createEntity, addComponent, getNextNumber],
+  );
+
+  const createCharacterController = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Character ${getNextNumber('Character')}`;
+      const entity = createEntity(actualName, parentId);
+
+      // Add CharacterController component with defaults (Contract v2.0 + Interaction Tuning)
+      const defaultCharacterControllerData: ICharacterControllerData = {
+        enabled: true,
+        slopeLimit: 45.0,
+        stepOffset: 0.3,
+        skinWidth: 0.08,
+        gravityScale: 1.0,
+        maxSpeed: 6.0,
+        jumpStrength: 6.5,
+        controlMode: 'auto',
+        inputMapping: {
+          forward: 'w',
+          backward: 's',
+          left: 'a',
+          right: 'd',
+          jump: 'space',
+        },
+        // Interaction tuning defaults
+        snapMaxSpeed: 5.0,
+        maxDepenetrationPerFrame: 0.5,
+        pushStrength: 1.0,
+        maxPushMass: 0,
+        isGrounded: false,
+      };
+      addComponent(
+        entity.id,
+        KnownComponentTypes.CHARACTER_CONTROLLER,
+        defaultCharacterControllerData,
+      );
+
+      // Add kinematic rigid body for character controller
+      addComponent(entity.id, KnownComponentTypes.RIGID_BODY, {
+        enabled: true,
+        bodyType: 'kinematic',
+        mass: 1,
+        gravityScale: 0, // Character controller handles its own gravity
+        canSleep: false, // Character should never sleep
+        material: {
+          friction: 0.6,
+          restitution: 0.0,
+          density: 1,
+        },
+      });
+
+      // Add capsule mesh collider for character controller
+      addComponent(entity.id, KnownComponentTypes.MESH_COLLIDER, {
+        enabled: true,
+        colliderType: 'capsule',
+        isTrigger: false,
+        center: [0, 0, 0],
+        size: {
+          radius: 0.25,
+          capsuleRadius: 0.25,
+          capsuleHeight: 0.5,
+          width: 1,
+          height: 1,
+          depth: 1,
+        },
+        physicsMaterial: {
+          friction: 0.6,
+          restitution: 0.3,
+          density: 1,
+        },
+      });
+
+      // Add capsule mesh for visualization
+      addMeshRenderer(entity.id, 'capsule');
+
+      // Position capsule so its bottom (feet) are at floor level
+      // Capsule mesh has pivot at center, so offset by half height
+      const transformData: ITransformData = {
+        position: [0, 0.5, 0], // Position at ground level (half height up)
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      };
+      updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+
+      return entity;
+    },
+    [createEntity, addComponent, addMeshRenderer, updateComponent, getNextNumber],
+  );
+
+  const createTrapezoid = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Trapezoid ${getNextNumber('Trapezoid')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'trapezoid');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createOctahedron = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Octahedron ${getNextNumber('Octahedron')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'octahedron');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createPrism = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Prism ${getNextNumber('Prism')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'prism');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createPyramid = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Pyramid ${getNextNumber('Pyramid')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'pyramid');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createCapsule = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Capsule ${getNextNumber('Capsule')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'capsule');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createHelix = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Helix ${getNextNumber('Helix')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'helix');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createMobiusStrip = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Mobius Strip ${getNextNumber('Mobius Strip')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'mobiusStrip');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createDodecahedron = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Dodecahedron ${getNextNumber('Dodecahedron')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'dodecahedron');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createIcosahedron = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Icosahedron ${getNextNumber('Icosahedron')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'icosahedron');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createTetrahedron = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Tetrahedron ${getNextNumber('Tetrahedron')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'tetrahedron');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createTorusKnot = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Torus Knot ${getNextNumber('Torus Knot')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'torusKnot');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createRamp = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Ramp ${getNextNumber('Ramp')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'ramp');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createStairs = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Stairs ${getNextNumber('Stairs')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'stairs');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createSpiralStairs = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Spiral Stairs ${getNextNumber('Spiral Stairs')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'spiralStairs');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createStar = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Star ${getNextNumber('Star')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'star');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createHeart = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Heart ${getNextNumber('Heart')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'heart');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createDiamond = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Diamond ${getNextNumber('Diamond')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'diamond');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createTube = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Tube ${getNextNumber('Tube')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'tube');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createCross = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Cross ${getNextNumber('Cross')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'cross');
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const createTree = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Tree ${getNextNumber('Tree')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'tree', undefined, {
+        material: { color: '#2d5016' }, // Forest green color for trees
+      });
+
+      const transformData: ITransformData = {
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      };
+      updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+
+      return entity;
+    },
+    [createEntity, addMeshRenderer, updateComponent, getNextNumber],
+  );
+
+  const createRock = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Rock ${getNextNumber('Rock')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'rock', undefined, {
+        material: { color: '#6b6b6b' }, // Gray color for rocks
+      });
+
+      const transformData: ITransformData = {
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      };
+      updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+
+      return entity;
+    },
+    [createEntity, addMeshRenderer, updateComponent, getNextNumber],
+  );
+
+  const createBush = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Bush ${getNextNumber('Bush')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'bush', undefined, {
+        material: { color: '#4a7c59' }, // Green color for bushes
+      });
+
+      const transformData: ITransformData = {
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      };
+      updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+
+      return entity;
+    },
+    [createEntity, addMeshRenderer, updateComponent, getNextNumber],
+  );
+
+  const createGrass = useCallback(
+    (name?: string, parentId?: number) => {
+      const actualName = name || `Grass ${getNextNumber('Grass')}`;
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'grass', undefined, {
+        material: { color: '#228B22' }, // Bright green color for grass
+      });
+
+      const transformData: ITransformData = {
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      };
+      updateComponent(entity.id, KnownComponentTypes.TRANSFORM, transformData);
+
+      return entity;
+    },
+    [createEntity, addMeshRenderer, updateComponent, getNextNumber],
+  );
+
+  const createCustomModel = useCallback(
+    (modelPath: string, name?: string, parentId?: number) => {
+      // Extract filename from path for default naming
+      const filename = modelPath.split('/').pop()?.split('.')[0] || 'Model';
+      const actualName = name || `${filename} ${getNextNumber(filename)}`;
+
+      const entity = createEntity(actualName, parentId);
+      addMeshRenderer(entity.id, 'custom', modelPath);
+
+      return entity;
+    },
+    [createEntity, addMeshRenderer, getNextNumber],
+  );
+
+  const deleteEntity = useCallback(
+    (entityId: number) => {
+      // Remove all components first
+      removeComponentsForEntity(entityId);
+
+      // Delete entity
+      entityManager.deleteEntity(entityId);
+
+      // Clear selection if this entity was selected
+      const selectedId = useEditorStore.getState().selectedId;
+      if (selectedId === entityId) {
+        setSelectedId(null);
+      }
+    },
+    [entityManager, removeComponentsForEntity, setSelectedId],
+  );
+
+  const createCustomShape = useCallback(
+    (shapeId: string, params?: Record<string, unknown>, name?: string, parentId?: number) => {
+      // Resolve the shape descriptor to get metadata
+      const descriptor = shapeRegistry.resolve(shapeId);
+      if (!descriptor) {
+        console.error(`Custom shape not found in registry: ${shapeId}`);
+        return null;
+      }
+
+      // Use the shape's name from metadata or provided name
+      const baseName = name || descriptor.meta.name;
+      const actualName = `${baseName} ${getNextNumber(baseName)}`;
+
+      // Create entity
+      const entity = createEntity(actualName, parentId);
+
+      // Get default params if not provided
+      const shapeParams = (() => {
+        if (params) {
+          const parsed = descriptor.paramsSchema.safeParse(params);
+          if (parsed.success) {
+            return parsed.data;
+          }
+
+          console.error(
+            `Invalid params provided for custom shape ${shapeId}, falling back to defaults`,
+            parsed.error,
+          );
+        }
+
+        return descriptor.getDefaultParams();
+      })();
+
+      // Add CustomShape component with shapeId and params
+      const customShapeData: CustomShapeData = {
+        shapeId,
+        params: shapeParams,
+      };
+      addComponent(entity.id, 'CustomShape', customShapeData);
+
+      // Add MeshRenderer component (required for rendering)
+      // We use a special meshId that won't match any built-in shapes
+      // If the shape has defaultMaterial or defaultColor, use it for the material
+      const overrides = (() => {
+        if (descriptor.meta.defaultMaterial) {
+          return { material: descriptor.meta.defaultMaterial };
+        } else if (descriptor.meta.defaultColor) {
+          return { material: { color: descriptor.meta.defaultColor } };
+        }
+        return undefined;
+      })();
+      addMeshRenderer(entity.id, 'customShape', undefined, overrides);
+
+      return entity;
+    },
+    [createEntity, addComponent, addMeshRenderer, getNextNumber],
+  );
+
+  return {
+    createEntity,
+    createCube,
+    createSphere,
+    createCylinder,
+    createCone,
+    createTorus,
+    createPlane,
+    createTerrain,
+    createWall,
+    createCamera,
+    createDirectionalLight,
+    createPointLight,
+    createSpotLight,
+    createAmbientLight,
+    createCharacterController,
+    createTrapezoid,
+    createOctahedron,
+    createPrism,
+    createPyramid,
+    createCapsule,
+    createHelix,
+    createMobiusStrip,
+    createDodecahedron,
+    createIcosahedron,
+    createTetrahedron,
+    createTorusKnot,
+    createRamp,
+    createStairs,
+    createSpiralStairs,
+    createStar,
+    createHeart,
+    createDiamond,
+    createTube,
+    createCross,
+    createTree,
+    createRock,
+    createBush,
+    createGrass,
+    createCustomModel,
+    createCustomShape,
+    createGeometryAssetEntity,
+    deleteEntity,
+  };
+};

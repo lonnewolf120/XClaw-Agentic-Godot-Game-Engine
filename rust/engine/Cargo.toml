@@ -1,0 +1,106 @@
+[workspace]
+members = [
+    ".",
+    "crates/scene",
+    "crates/ecs-bridge",
+    "crates/ecs-manager",
+    "crates/scene-graph",
+    "crates/assets",
+    "crates/wasm-bridge",
+    "crates/physics",
+    "crates/audio",
+    "crates/scripting",
+    "crates/events",
+    "xtask",
+]
+
+[package]
+name = "vibe-coder-engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Internal workspace dependencies - always included
+vibe-scene = { path = "crates/scene" }
+vibe-ecs-bridge = { path = "crates/ecs-bridge" }
+vibe-ecs-manager = { path = "crates/ecs-manager" }
+vibe-scene-graph = { path = "crates/scene-graph" }
+vibe-assets = { path = "crates/assets" }
+vibe-wasm-bridge = { path = "crates/wasm-bridge" }
+vibe-events = { path = "crates/events" }
+
+# Optional feature-gated dependencies
+vibe-physics = { path = "crates/physics", optional = true }
+vibe-audio = { path = "crates/audio", optional = true }
+vibe-scripting = { path = "crates/scripting", optional = true }
+
+# Physics dependencies - only when physics feature enabled
+rapier3d = { version = "0.17", features = ["dim3"], optional = true }
+parry3d = { version = "0.13", optional = true }
+
+# Core rendering (three-d) - renderer feature
+winit = { version = "0.28", optional = true }
+three-d = { version = "0.17", optional = true }
+three-d-asset = { version = "0.7", default-features = false, optional = true }
+
+# Math
+glam = { version = "0.27", features = ["serde"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Asset loading
+gltf = { version = "1.4", features = ["utils"], optional = true }
+
+# Random number generation (for testing)
+rand = "0.8"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+env_logger = "0.11"
+log = "0.4"
+
+# CLI
+clap = { version = "4.5", features = ["derive"] }
+
+# Environment variables
+dotenvy = "0.15"
+
+# Async runtime helper
+pollster = "0.3"
+
+# Screenshot support
+image = "0.25"
+xcap = "0.0.12"
+
+[features]
+# Default: Full-featured build
+default = ["renderer", "physics", "gltf-support", "scripting-support"]
+
+# Core features
+renderer = ["winit", "three-d", "three-d-asset"]
+physics = ["vibe-physics", "rapier3d", "parry3d"]
+audio-support = ["vibe-audio"]
+scripting-support = ["vibe-scripting"]
+scripting-hot-reload = ["scripting-support", "vibe-scripting/hot-reload"]
+
+# Asset loading
+gltf-support = ["gltf", "three-d-asset/http"]  # http enables meshopt
+
+# Experimental
+bvh-acceleration = []
+
+# Screenshot support always included (lightweight)
+screenshot = []
+
+[lib]
+name = "vibe_coder_engine"
+path = "src/lib.rs"
+
+[[bin]]
+name = "vibe-engine"
+path = "src/main.rs"

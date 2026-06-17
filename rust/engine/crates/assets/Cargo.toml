@@ -1,0 +1,25 @@
+[package]
+name = "vibe-assets"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wgpu = "0.19"
+glam = "0.27"
+bytemuck = { version = "1.24", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+log = "0.4"
+
+# Image loading
+image = "0.24"
+
+# GLTF loading
+# Note: extensions feature allows handling models with unsupported extensions like KHR_mesh_quantization
+# Note: Draco-compressed models should be decompressed offline using gltf-transform
+gltf = { version = "1.4", features = ["utils", "extensions"], optional = true }
+
+[features]
+default = ["gltf-support"]
+gltf-support = ["gltf"]

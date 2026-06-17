@@ -1,0 +1,523 @@
+#!/usr/bin/env node
+
+/**
+ * Unified Optimization Script
+ *
+ * KISS Principle: Single entry point for all model optimization
+ * - Decompresses Draco-compressed models offline (faster than runtime)
+ * - Analyzes models automatically
+ * - Applies appropriate decimation (Blender or meshopt)
+ * - Generates LODs
+ * - Compresses with meshoptimizer
+ *
+ * Usage:
+ *   yarn optimize                    # Optimize all models
+ *   yarn optimize --model=FarmHouse  # Optimize specific model
+ *   yarn optimize --check-only       # Just check complexity
+ *   yarn optimize --force            # Force re-optimization
+ */
+
+import { config } from 'dotenv';
+import { readdir, mkdir, readFile, writeFile, stat } from 'fs/promises';
+import { join, relative, basename, extname, dirname } from 'path';
+import { createHash } from 'crypto';
+import { fileURLToPath } from 'url';
+import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { simplify, weld, prune, dedup } from '@gltf-transform/functions';
+import { MeshoptSimplifier, MeshoptEncoder } from 'meshoptimizer';
+import draco3d from 'draco3dgltf';
+import { analyzeModel } from './lib/modelAnalyzer.js';
+import {
+  checkBlenderInstalled,
+  decimateWithBlender,
+  shouldUseBlender,
+} from './lib/blenderDecimator.js';
+import { logger } from './lib/logger.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = join(__dirname, '..');
+
+// Initialize meshoptimizer
+await MeshoptSimplifier.ready;
+
+// Load environment
+config();
+
+// Initialize glTF I/O with all dependencies
+const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
+  'draco3d.decoder': await draco3d.createDecoderModule(), // For decompressing input models
+  // Note: No Draco encoder - we use meshopt for output (works in Rust!)
+  'meshopt.decoder': MeshoptSimplifier,
+  'meshopt.encoder': MeshoptEncoder,
+});
+
+// Parse CLI args
+const args = {
+  checkOnly: process.argv.includes('--check-only'),
+  force: process.argv.includes('--force'),
+  model: process.argv.find((arg) => arg.startsWith('--model='))?.split('=')[1],
+  silent: process.argv.includes('--silent'),
+};
+
+// Manifest path
+const manifestPath = join(projectRoot, '.model-optimization-manifest.json');
+
+// Environment config
+const ENV = {
+  useBlender: process.env.USE_BLENDER_DECIMATION === 'true',
+  autoDecimate: process.env.AUTO_DECIMATE_MODELS === 'true',
+  blenderPath: process.env.BLENDER_PATH || 'blender',
+  modelsDir: process.env.MODELS_DIR || 'src/game/assets/models',
+};
+
+/**
+ * Load or create optimization manifest
+ */
+async function loadManifest() {
+  try {
+    const content = await readFile(manifestPath, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return { version: 1, optimized: {} };
+  }
+}
+
+/**
+ * Save optimization manifest
+ */
+async function saveManifest(manifest) {
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
+}
+
+/**
+ * Calculate file hash for caching
+ */
+async function getFileHash(filePath) {
+  const content = await readFile(filePath);
+  return createHash('sha256').update(content).digest('hex').slice(0, 16);
+}
+
+/**
+ * Check if a model uses Draco compression
+ */
+function isDracoCompressed(document) {
+  const root = document.getRoot();
+  const extensionsUsed = root.listExtensionsUsed();
+  return extensionsUsed.some((ext) => ext.extensionName === 'KHR_draco_mesh_compression');
+}
+
+/**
+ * Decompress Draco-compressed model in-place
+ * Returns true if decompression occurred, false if already uncompressed
+ */
+async function decompressDracoIfNeeded(modelPath) {
+  const document = await io.read(modelPath);
+
+  if (!isDracoCompressed(document)) {
+    return false; // Not Draco-compressed
+  }
+
+  logger.info(`Decompressing Draco model: ${basename(modelPath)}`);
+
+  // Remove Draco extension
+  const root = document.getRoot();
+  const dracoExtension = root
+    .listExtensionsUsed()
+    .find((ext) => ext.extensionName === 'KHR_draco_mesh_compression');
+
+  if (dracoExtension) {
+    dracoExtension.dispose();
+  }
+
+  // Clean up the document
+  await document.transform(prune(), dedup());
+
+  // Overwrite source file with decompressed version
+  await io.write(modelPath, document);
+
+  logger.success(`Decompressed ${basename(modelPath)} (now uncompressed)`);
+  return true;
+}
+
+/**
+ * Check if model needs optimization
+ */
+async function needsOptimization(modelPath, manifest) {
+  if (args.force) return true;
+
+  const relativePath = relative(projectRoot, modelPath);
+  const entry = manifest.optimized[relativePath];
+
+  if (!entry) return true;
+
+  // Check if source file changed
+  try {
+    const currentHash = await getFileHash(modelPath);
+    if (currentHash !== entry.sourceHash) return true;
+
+    // Check if output files exist
+    const modelDir = dirname(modelPath);
+    const fileName = basename(modelPath, extname(modelPath));
+    const glbPath = join(modelDir, 'glb', `${fileName}.glb`);
+    const lodHighPath = join(modelDir, 'lod', `${fileName}.high_fidelity.glb`);
+    const lodLowPath = join(modelDir, 'lod', `${fileName}.low_fidelity.glb`);
+
+    await stat(glbPath);
+    await stat(lodHighPath);
+    await stat(lodLowPath);
+
+    return false; // All files exist and source unchanged
+  } catch {
+    return true; // File doesn't exist or error checking
+  }
+}
+
+/**
+ * Find all source models
+ */
+async function findModels(modelsDir, filterModel) {
+  const models = [];
+  const dirs = await readdir(modelsDir, { withFileTypes: true });
+
+  for (const dir of dirs) {
+    if (!dir.isDirectory()) continue;
+    if (filterModel && dir.name !== filterModel) continue;
+
+    const modelPath = join(modelsDir, dir.name);
+    const dirContents = await readdir(modelPath);
+
+    for (const file of dirContents) {
+      if (file.endsWith('.glb') && !file.includes('lod') && !file.includes('optimized')) {
+        models.push({
+          dir: dir.name,
+          file,
+          path: join(modelPath, file),
+        });
+      }
+    }
+  }
+
+  return models;
+}
+
+/**
+ * Check and report model complexity
+ */
+async function checkComplexity(models) {
+  logger.info('Analyzing model complexity...');
+
+  const results = [];
+
+  for (const model of models) {
+    try {
+      const document = await io.read(model.path);
+      const analysis = analyzeModel(document);
+
+      results.push({
+        ...model,
+        analysis,
+      });
+
+      const icon =
+        analysis.severity === 'critical' ? '🔴' : analysis.severity === 'warning' ? '⚠️' : '✅';
+      logger.info(`${icon} ${model.dir}/${model.file}`, {
+        triangles: analysis.triangleCount.toLocaleString(),
+        type: analysis.classification,
+        needsOptimization: analysis.needsOptimization,
+      });
+    } catch (err) {
+      logger.error(`Failed to analyze ${model.path}`, { error: err.message });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Apply meshopt compression to a document
+ * This works in both Three.js and Rust (unlike Draco)
+ */
+async function applyMeshoptCompression(document) {
+  const { quantize } = await import('@gltf-transform/functions');
+
+  // Apply quantization + meshopt via write options
+  await document.transform(
+    quantize({
+      quantizePosition: 14, // 14 bits = 0.006mm precision at 1m scale
+      quantizeNormal: 10, // 10 bits sufficient for normals
+      quantizeTexcoord: 12, // 12 bits = 0.02% UV precision
+      quantizeColor: 8, // 8 bits = standard RGB
+    }),
+  );
+
+  return document;
+}
+
+/**
+ * Generate LOD variants from base model
+ * Based on industry LOD benchmarks:
+ * - LOD0 (base): 20k-80k (hero), 5k-20k (prop), 1k-5k (background)
+ * - LOD1 (high_fidelity): 40% of base (targeting mid-range)
+ * - LOD2 (low_fidelity): 10% of base (targeting low-end/distant view)
+ * All variants are compressed with meshopt (works in Rust + Three.js)
+ */
+async function generateLODVariants(baseModelPath, modelDir, fileName) {
+  const lodDir = join(modelDir, 'lod');
+  await mkdir(lodDir, { recursive: true });
+
+  const lodVariants = [
+    // LOD1: 40% of base (e.g., 50k → 20k, 20k → 8k, 5k → 2k)
+    { name: 'high_fidelity', ratio: 0.4, error: 0.01 },
+    // LOD2: 10% of base (e.g., 50k → 5k, 20k → 2k, 5k → 500)
+    { name: 'low_fidelity', ratio: 0.1, error: 0.1 },
+  ];
+
+  const results = [];
+
+  for (const variant of lodVariants) {
+    const outputPath = join(lodDir, `${fileName}.${variant.name}.glb`);
+
+    try {
+      logger.info(`Generating ${variant.name} LOD...`, {
+        ratio: `${(variant.ratio * 100).toFixed(0)}%`,
+      });
+
+      // Load base model
+      const document = await io.read(baseModelPath);
+
+      // Apply pre-processing
+      await document.transform(prune(), dedup(), weld({ tolerance: 0.0001 }));
+
+      // Apply simplification
+      await document.transform(
+        simplify({ simplifier: MeshoptSimplifier, ratio: variant.ratio, error: variant.error }),
+      );
+
+      // Apply meshopt compression (works in both Three.js and Rust!)
+      await applyMeshoptCompression(document);
+
+      // Write LOD variant
+      await io.write(outputPath, document);
+
+      // Get stats
+      const triangles = analyzeModel(document).triangleCount;
+
+      logger.success(`Generated ${variant.name}`, {
+        output: `lod/${fileName}.${variant.name}.glb`,
+        triangles: triangles.toLocaleString(),
+      });
+
+      results.push({ variant: variant.name, path: outputPath, triangles });
+    } catch (err) {
+      logger.error(`Failed to generate ${variant.name} LOD`, { error: err.message });
+      results.push({ variant: variant.name, error: err.message });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Optimize a single model
+ */
+async function optimizeModel(model, blenderAvailable) {
+  const { path, dir, file, analysis } = model;
+
+  if (!analysis.needsOptimization) {
+    logger.info(`Skipping ${dir}/${file} - already optimized`);
+    return { skipped: true };
+  }
+
+  logger.info(`Optimizing ${dir}/${file}...`, {
+    triangles: analysis.triangleCount.toLocaleString(),
+    reduction: `${analysis.reduction}%`,
+  });
+
+  // Determine if we should use Blender
+  const useBlender = shouldUseBlender(analysis.triangleCount, {
+    targetRatio: analysis.recommendedRatio,
+    useBlender: ENV.useBlender,
+    autoDecimate: ENV.autoDecimate,
+  });
+
+  if (useBlender && !blenderAvailable) {
+    logger.warn(`Blender decimation recommended but Blender not available for ${dir}/${file}`);
+  }
+
+  // If Blender decimation is enabled and available
+  if (useBlender && blenderAvailable && ENV.autoDecimate) {
+    // Save to glb/ subdirectory where the app loads models from
+    const modelDir = join(ENV.modelsDir, dir);
+    const glbDir = join(modelDir, 'glb');
+    const outputPath = join(glbDir, file);
+
+    try {
+      // Ensure glb directory exists
+      await mkdir(glbDir, { recursive: true });
+
+      await decimateWithBlender(path, outputPath, {
+        ratio: analysis.recommendedRatio,
+        textureSize: 1024,
+        blenderPath: ENV.blenderPath,
+        silent: args.silent,
+      });
+
+      logger.success(`Decimated ${dir}/${file}`, {
+        output: `glb/${file}`,
+        location: relative(process.cwd(), outputPath),
+      });
+
+      // Apply meshopt compression to the decimated base model
+      logger.info(`Applying meshopt compression to base model...`);
+      const baseDocument = await io.read(outputPath);
+      await applyMeshoptCompression(baseDocument);
+      await io.write(outputPath, baseDocument);
+      logger.success(`Compressed base model with meshopt`);
+
+      // Generate LOD variants from the decimated base model
+      const fileName = basename(file, extname(file));
+      const lodResults = await generateLODVariants(outputPath, modelDir, fileName);
+
+      return {
+        success: true,
+        decimated: true,
+        outputPath,
+        lodVariants: lodResults,
+      };
+    } catch (err) {
+      logger.error(`Failed to decimate ${dir}/${file}`, { error: err.message });
+      return { success: false, error: err.message };
+    }
+  }
+
+  // TODO: Integrate with main optimization pipeline (meshopt, LOD, compression)
+  logger.warn(`Full pipeline integration not yet implemented for ${dir}/${file}`);
+  return { success: false, reason: 'Pipeline integration pending' };
+}
+
+/**
+ * Main function
+ */
+async function main() {
+  logger.info('🚀 Starting model optimization', { args, env: ENV });
+
+  // Load manifest
+  const manifest = await loadManifest();
+
+  // Find models
+  const models = await findModels(ENV.modelsDir, args.model);
+  logger.info(`Found ${models.length} model(s)`);
+
+  if (models.length === 0) {
+    logger.warn('No models found');
+    return;
+  }
+
+  // Check which models need optimization (caching)
+  const modelsToOptimize = [];
+  const modelsSkippedCache = [];
+
+  for (const model of models) {
+    const needs = await needsOptimization(model.path, manifest);
+    if (needs) {
+      modelsToOptimize.push(model);
+    } else {
+      modelsSkippedCache.push(model);
+    }
+  }
+
+  if (modelsSkippedCache.length > 0 && !args.silent) {
+    logger.info(`Skipping ${modelsSkippedCache.length} cached model(s)`, {
+      cached: modelsSkippedCache.map((m) => `${m.dir}/${m.file}`),
+    });
+  }
+
+  if (modelsToOptimize.length === 0) {
+    logger.info('All models are up to date');
+    return;
+  }
+
+  // Decompress any Draco-compressed models (preprocessing step)
+  let dracoDecompressed = 0;
+  for (const model of modelsToOptimize) {
+    try {
+      const wasDecompressed = await decompressDracoIfNeeded(model.path);
+      if (wasDecompressed) {
+        dracoDecompressed++;
+      }
+    } catch (err) {
+      logger.error(`Failed to decompress ${model.path}`, { error: err.message });
+    }
+  }
+
+  if (dracoDecompressed > 0) {
+    logger.info(`Decompressed ${dracoDecompressed} Draco-compressed model(s)`);
+  }
+
+  // Analyze complexity for models that need optimization
+  const analyzed = await checkComplexity(modelsToOptimize);
+
+  // If check-only mode, stop here
+  if (args.checkOnly) {
+    const needsWork = analyzed.filter((m) => m.analysis?.needsOptimization).length;
+    logger.info(`Check complete: ${needsWork}/${analyzed.length} models need optimization`);
+    return;
+  }
+
+  // Check if Blender is available
+  let blenderAvailable = false;
+  if (ENV.useBlender) {
+    const blenderCheck = await checkBlenderInstalled(ENV.blenderPath);
+    blenderAvailable = blenderCheck.installed;
+
+    if (blenderAvailable) {
+      logger.info(`Blender ${blenderCheck.version} detected`);
+    } else {
+      logger.warn('Blender not found - falling back to meshopt only');
+    }
+  }
+
+  // Optimize each model
+  const results = [];
+  for (const model of analyzed) {
+    const result = await optimizeModel(model, blenderAvailable);
+    results.push({ ...model, result });
+
+    // Update manifest if successful
+    if (result.success) {
+      const relativePath = relative(projectRoot, model.path);
+      const sourceHash = await getFileHash(model.path);
+
+      manifest.optimized[relativePath] = {
+        sourceHash,
+        timestamp: Date.now(),
+        outputs: {
+          base: result.outputPath,
+          lodVariants: result.lodVariants?.map((v) => v.path) || [],
+        },
+      };
+    }
+  }
+
+  // Save manifest
+  await saveManifest(manifest);
+
+  // Summary
+  const successful = results.filter((r) => r.result?.success).length;
+  const skipped = results.filter((r) => r.result?.skipped).length;
+  const failed = results.filter((r) => !r.result?.success && !r.result?.skipped).length;
+
+  logger.info('Optimization complete', {
+    total: results.length,
+    successful,
+    skipped,
+    cached: modelsSkippedCache.length,
+    failed,
+  });
+}
+
+main().catch((err) => {
+  logger.error('Fatal error', { error: err.message, stack: err.stack });
+  process.exit(1);
+});
