@@ -1,0 +1,15 @@
+{
+  "template_id": "kenney_starter_kit_3d_platformer",
+  "source_repo": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer.git",
+  "godot_version": "4.6",
+  "license": "CC0",
+  "features": [
+    "Character controller with double jump",
+    "Collectable coins and falling platforms",
+    "Camera controls rotate and zoom",
+    "Gamepad support",
+    "Sprites, 3D Models, and sound effects"
+  ],
+  "engine_catalog_path": "vibe-game-engine/config/template_catalog.json",
+  "editable": true
+}
