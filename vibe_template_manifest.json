@@ -1,0 +1,13 @@
+{
+  "template_id": "kenney_starter_kit_basic_scene",
+  "source_repo": "https://github.com/KenneyNL/Starter-Kit-Basic-Scene.git",
+  "godot_version": "4.6",
+  "license": "CC0",
+  "features": [
+    "Basic scene and environment setup",
+    "Bright default lighting result",
+    "Mini Arena pack integration"
+  ],
+  "engine_catalog_path": "vibe-game-engine/config/template_catalog.json",
+  "editable": true
+}
