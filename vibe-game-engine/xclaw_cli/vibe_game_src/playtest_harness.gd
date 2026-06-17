@@ -62,7 +62,7 @@ func _run_all(gm: Node) -> void:
 		await _wait_built(gm)
 		gm.goto_level(i)
 		await _wait_built(gm)
-		_check("reach_level_%d" % i, await _run_bot(gm, 1200))
+		_check("reach_level_%d" % i, await _run_bot(gm, 1500))
 
 	# coin scores
 	if _level_has(gm, 0, "collectibles"):
@@ -119,16 +119,55 @@ func _jump_fires(gm: Node) -> bool:
 
 
 func _run_bot(gm: Node, budget: int) -> bool:
-	# Phase-1 levels are flat / step-down, so a forward run reaches the goal. The jump
-	# mechanic is verified independently by `jump_works`, keeping reachability deterministic.
+	# Bot: hold ui_right; when forward progress STALLS (wall / step-up) and on the floor,
+	# tap ui_accept to hop over it. Flat / step-down ground never stalls, so this is a no-op
+	# there (keeps Phase-1 deterministic); step-ups get cleared for LLM-authored levels.
+	# Death-pits are out of scope for the bot — levels must keep continuous ground.
 	_goal_hit = false
+	var levels: Array = gm.spec.get("levels", [])
+	var level: Dictionary = levels[gm.current_level] if gm.current_level < levels.size() else {}
+	var goal_x := _goal_x(level)
+
 	_set_action("ui_right", true)
 	var f := 0
+	var last_x := _player_x(gm)
+	var stall := 0
+	var jump_cd := 0
 	while f < budget and not _goal_hit:
+		var x := _player_x(gm)
+		stall = stall + 1 if x - last_x < 1.0 else 0
+		last_x = x
+		if jump_cd > 0:
+			jump_cd -= 1
+		if stall >= 16 and jump_cd == 0 and gm.player != null and is_instance_valid(gm.player) and gm.player.is_on_floor():
+			await _tap("ui_accept")
+			jump_cd = 24
+			stall = 0
 		await get_tree().physics_frame
 		f += 1
 	_set_action("ui_right", false)
+
+	if not _goal_hit:
+		print("VIBE_TEST DETAIL reach_level_%d player_x=%d goal_x=%d frames=%d" % [
+			gm.current_level, int(_player_x(gm)), int(goal_x), f])
 	return _goal_hit
+
+
+func _tap(action: String) -> void:
+	_set_action(action, true)
+	await get_tree().physics_frame
+	_set_action(action, false)
+
+
+func _player_x(gm: Node) -> float:
+	if gm.player != null and is_instance_valid(gm.player):
+		return gm.player.global_position.x
+	return 0.0
+
+
+func _goal_x(level: Dictionary) -> float:
+	var g: Dictionary = level.get("goal", {})
+	return float(g.get("x", 0)) + float(g.get("w", 48)) / 2.0
 
 
 func _death_costs_life(group: String, gm: Node) -> bool:

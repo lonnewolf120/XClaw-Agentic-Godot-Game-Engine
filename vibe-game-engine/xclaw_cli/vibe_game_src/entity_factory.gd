@@ -71,12 +71,12 @@ func spawn_enemy(enemy_spec: Dictionary) -> Area2D:
 	area.add_child(col)
 	area.add_child(_visual(w, h, Color(0.85, 0.25, 0.25)))
 
-	# 'patroller' moves; 'chaser' lands in Phase 3 — until then it is a static hazard.
-	area.set_script(load("res://vibe_game/parts/patroller.gd"))
-	if t == "patroller":
+	if t == "chaser":
+		area.set_script(load("res://vibe_game/parts/chaser.gd"))
+		# Keep chasers slower than the player (SPEED 240 in the controllers) so they're escapable.
+		area.set("speed", min(float(enemy_spec.get("speed", 70)), 140.0))
+	else:  # 'patroller' (default)
+		area.set_script(load("res://vibe_game/parts/patroller.gd"))
 		area.set("range_px", float(enemy_spec.get("patrol", 120)))
 		area.set("speed", float(enemy_spec.get("speed", 60)))
-	else:
-		area.set("range_px", 0.0)
-		area.set("speed", 0.0)
 	return area

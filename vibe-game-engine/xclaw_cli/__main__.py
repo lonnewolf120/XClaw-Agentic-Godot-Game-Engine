@@ -35,6 +35,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--max-attempts", type=int, default=3, help="Self-correction retry cap")
     parser.add_argument(
+        "--game", action="store_true",
+        help="Schema-driven FULL-GAME authoring: emit a validated game_spec.json + player.gd and "
+        "build a playable menu->levels->score->game-over game, gated by the automated playtest.",
+    )
+    parser.add_argument(
         "--export", action="store_true",
         help="Export a runnable artifact after a successful LLM loop",
     )
@@ -49,6 +54,30 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     from xclaw_cli.llm import LLMError
+
+    # ── Schema-driven full-game authoring path ─────────────────────────────
+    if args.game:
+        from xclaw_cli.game_engine import generate_game
+
+        try:
+            gres = generate_game(
+                args.prompt,
+                provider=args.provider,
+                model=args.model,
+                max_attempts=args.max_attempts,
+                on_event=lambda m: print(f"[xclaw] {m}", flush=True),
+            )
+        except LLMError as exc:
+            print(f"\nXCLAW_ERROR provider/model failure: {exc}", file=sys.stderr)
+            return 2
+        except FileNotFoundError as exc:
+            print(f"\nXCLAW_ERROR {exc}", file=sys.stderr)
+            return 2
+        print(
+            f"\nXCLAW_GAME_RESULT ok={gres.ok} run_id={gres.run_id} "
+            f"attempts={gres.attempts} project={gres.project_dir}"
+        )
+        return 0 if gres.ok else 1
 
     try:
         result = generate(

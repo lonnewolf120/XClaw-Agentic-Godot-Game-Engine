@@ -53,12 +53,22 @@ class PlaytestResult:
     checks: int = 0
     failed: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
+    details: list[str] = field(default_factory=list)
     timed_out: bool = False
     raw_log: str = ""
 
     @property
     def ok(self) -> bool:
         return self.verdict == "PASS" and not self.errors
+
+    def feedback(self) -> list[str]:
+        """Human-readable failure lines to feed back to the model (errors + failed + details)."""
+        out: list[str] = []
+        out.extend(f"script error: {e}" for e in self.errors)
+        if self.failed:
+            out.append("failed checks: " + ", ".join(self.failed))
+        out.extend(self.details)
+        return out
 
     def summary(self) -> str:
         if self.errors:
@@ -174,11 +184,17 @@ class GodotHeadless:
 
         errors = [e for e in self._errors_in(log) if "WASAPI" not in e and "X11" not in e]
         verdict, checks, failed = self._parse_verdict(log)
+        details = [
+            line.strip()[len("VIBE_TEST DETAIL "):]
+            for line in log.splitlines()
+            if line.strip().startswith("VIBE_TEST DETAIL ")
+        ]
         return PlaytestResult(
             verdict=verdict,
             checks=checks,
             failed=failed,
             errors=errors,
+            details=details,
             timed_out=timed_out,
             raw_log=log,
         )
